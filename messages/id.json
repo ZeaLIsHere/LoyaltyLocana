@@ -79,7 +79,7 @@
     "scanSuccess": "Scan berhasil!",
     "stampAdded": "Stamp berhasil ditambahkan!",
     "rewardRedeemed": "Reward berhasil di-redeem!",
-    "cooldownError": "Customer ini baru saja discan. Silakan tunggu beberapa menit.",
+    "cooldownError": "Customer ini baru saja discan. Tunggu beberapa detik.",
     "scanAgain": "Scan Lagi",
     "startScan": "Mulai Scan",
     "stopScan": "Hentikan",

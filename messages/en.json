@@ -79,7 +79,7 @@
     "scanSuccess": "Scan successful!",
     "stampAdded": "Stamp added successfully!",
     "rewardRedeemed": "Reward redeemed successfully!",
-    "cooldownError": "This customer was recently scanned. Please wait a few minutes.",
+    "cooldownError": "This customer was just scanned. Please wait a few seconds.",
     "scanAgain": "Scan Again",
     "startScan": "Start Scan",
     "stopScan": "Stop",
