@@ -128,6 +128,7 @@
     "allKasir": "All cashiers",
     "createKasirSuccess": "Cashier account created successfully",
     "confirmPassword": "Cashier password",
+    "noCustomers": "No registered customers yet",
     "noKasir": "No cashier accounts yet",
     "noRules": "No reward rules yet",
     "noLogs": "No activity yet",
@@ -137,7 +138,18 @@
     "actionRedeem": "Redeem Reward",
     "actionRejected": "Rejected (cooldown)",
     "ruleSaved": "Reward rule saved successfully",
-    "statusUpdated": "Status updated successfully"
+    "statusUpdated": "Status updated successfully",
+    "dashboardSubtitle": "Track your cafe loyalty program performance",
+    "customersRegistered": "Registered customer accounts",
+    "scansTodayHint": "Add stamp & redeem today",
+    "rewardsRedeemedHint": "Rewards used by customers",
+    "scanActivity7d": "Scan Activity (Last 7 Days)",
+    "scanActivityDesc": "Daily trend of stamps and reward redemptions",
+    "recentCustomers": "Recent Customers",
+    "recentCustomersDesc": "List of newly joined customers",
+    "ownerRole": "Cafe Owner",
+    "loyaltySystem": "Loyalty System",
+    "panelTitle": "Locana Owner"
   },
   "common": {
     "save": "Save",

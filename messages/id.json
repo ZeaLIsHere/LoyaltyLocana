@@ -128,6 +128,7 @@
     "allKasir": "Semua kasir",
     "createKasirSuccess": "Akun kasir berhasil dibuat",
     "confirmPassword": "Password kasir",
+    "noCustomers": "Belum ada customer terdaftar",
     "noKasir": "Belum ada akun kasir",
     "noRules": "Belum ada aturan reward",
     "noLogs": "Belum ada aktivitas",
@@ -137,7 +138,18 @@
     "actionRedeem": "Redeem Reward",
     "actionRejected": "Ditolak (cooldown)",
     "ruleSaved": "Aturan reward berhasil disimpan",
-    "statusUpdated": "Status berhasil diperbarui"
+    "statusUpdated": "Status berhasil diperbarui",
+    "dashboardSubtitle": "Pantau performa program loyalty cafemu",
+    "customersRegistered": "Akun customer terdaftar",
+    "scansTodayHint": "Tambah stamp & redeem hari ini",
+    "rewardsRedeemedHint": "Reward terpakai oleh customer",
+    "scanActivity7d": "Aktivitas Scan (7 Hari Terakhir)",
+    "scanActivityDesc": "Tren harian stempel dan penukaran reward",
+    "recentCustomers": "Customer Terbaru",
+    "recentCustomersDesc": "Daftar customer yang baru bergabung",
+    "ownerRole": "Cafe Owner",
+    "loyaltySystem": "Sistem Loyalty",
+    "panelTitle": "Locana Owner"
   },
   "common": {
     "save": "Simpan",

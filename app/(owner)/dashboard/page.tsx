@@ -1,8 +1,11 @@
+import { getLocale } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import DashboardClient from '@/components/dashboard-client'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
+  const locale = await getLocale()
+  const intlLocale = locale === 'id' ? 'id-ID' : 'en-US'
 
   // 1. Fetch total customer count
   const { count: customerCount } = await supabase
@@ -53,7 +56,7 @@ export default async function DashboardPage() {
   for (let i = 6; i >= 0; i--) {
     const d = new Date()
     d.setDate(d.getDate() - i)
-    const dateStr = d.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric' })
+    const dateStr = d.toLocaleDateString(intlLocale, { weekday: 'short', day: 'numeric' })
     const startOfDay = new Date(d)
     startOfDay.setHours(0, 0, 0, 0)
     const endOfDay = new Date(d)

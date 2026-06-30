@@ -19,26 +19,10 @@ export default function OwnerSidebar({ ownerName, signOutAction }: OwnerSidebarP
   const [isOpen, setIsOpen] = useState(false)
 
   const menuItems = [
-    {
-      label: t('owner.dashboard'),
-      href: '/dashboard',
-      icon: LayoutDashboard,
-    },
-    {
-      label: t('owner.kasirManagement'),
-      href: '/kasir-management',
-      icon: Users,
-    },
-    {
-      label: t('owner.rewardRules'),
-      href: '/reward-rules',
-      icon: Award,
-    },
-    {
-      label: t('owner.activityLogs'),
-      href: '/activity-logs',
-      icon: FileSpreadsheet,
-    },
+    { label: t('owner.dashboard'), href: '/dashboard', icon: LayoutDashboard },
+    { label: t('owner.kasirManagement'), href: '/kasir-management', icon: Users },
+    { label: t('owner.rewardRules'), href: '/reward-rules', icon: Award },
+    { label: t('owner.activityLogs'), href: '/activity-logs', icon: FileSpreadsheet },
   ]
 
   const toggleSidebar = () => setIsOpen(!isOpen)
@@ -46,14 +30,16 @@ export default function OwnerSidebar({ ownerName, signOutAction }: OwnerSidebarP
   return (
     <>
       {/* Mobile Top Navbar */}
-      <header className="flex h-16 w-full items-center justify-between border-b border-stone-200 bg-white px-6 md:hidden dark:border-stone-800 dark:bg-stone-900 sticky top-0 z-40 shadow-sm">
+      <header className="sticky top-0 z-40 flex h-16 w-full items-center justify-between border-b border-sidebar-border bg-sidebar px-6 shadow-sm md:hidden">
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-500 text-white">
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
             <Coffee className="h-4 w-4" />
-          </div>
-          <span className="font-bold text-stone-900 dark:text-white">Locana</span>
+          </span>
+          <span className="text-lg tracking-tight text-sidebar-foreground [font-family:var(--font-heading)]">
+            {t('app.name')}
+          </span>
         </div>
-        <Button variant="ghost" size="icon" onClick={toggleSidebar}>
+        <Button variant="ghost" size="icon" onClick={toggleSidebar} aria-label="Menu">
           {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </Button>
       </header>
@@ -61,25 +47,27 @@ export default function OwnerSidebar({ ownerName, signOutAction }: OwnerSidebarP
       {/* Sidebar Frame */}
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-stone-200 bg-white transition-transform duration-300 md:translate-x-0 dark:border-stone-800 dark:bg-stone-900',
+          'fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-sidebar-border bg-sidebar transition-transform duration-300 md:translate-x-0',
           isOpen ? 'translate-x-0' : '-translate-x-full',
           'md:sticky md:top-0 md:h-screen'
         )}
       >
-        {/* Brand Logo Header */}
-        <div className="flex h-16 items-center gap-2 px-6 border-b border-stone-200/50 dark:border-stone-800/50">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-500 text-white shadow-md">
+        {/* Brand Header */}
+        <div className="flex h-16 items-center gap-2 border-b border-sidebar-border px-6">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-md">
             <Coffee className="h-5 w-5" />
-          </div>
+          </span>
           <div className="flex flex-col">
-            <span className="font-extrabold text-stone-900 dark:text-white text-sm tracking-tight">
-              Locana Owner
+            <span className="text-sm tracking-tight text-sidebar-foreground [font-family:var(--font-heading)]">
+              {t('owner.panelTitle')}
             </span>
-            <span className="text-[9px] text-stone-400 font-mono">Loyalty System</span>
+            <span className="font-mono text-[9px] text-muted-foreground">
+              {t('owner.loyaltySystem')}
+            </span>
           </div>
         </div>
 
-        {/* Navigation Items */}
+        {/* Navigation */}
         <nav className="flex-1 space-y-1 p-4">
           {menuItems.map((item) => {
             const Icon = item.icon
@@ -93,8 +81,8 @@ export default function OwnerSidebar({ ownerName, signOutAction }: OwnerSidebarP
                 className={cn(
                   'flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-semibold transition-all duration-200 active:scale-[0.98]',
                   isActive
-                    ? 'bg-amber-500 text-white shadow-md shadow-amber-500/10'
-                    : 'text-stone-600 hover:bg-stone-50 dark:text-stone-300 dark:hover:bg-stone-800/50'
+                    ? 'bg-sidebar-accent text-sidebar-accent-foreground shadow-sm'
+                    : 'text-sidebar-foreground/80 hover:bg-sidebar-accent/15 hover:text-sidebar-foreground'
                 )}
               >
                 <Icon className="h-4 w-4" />
@@ -104,22 +92,18 @@ export default function OwnerSidebar({ ownerName, signOutAction }: OwnerSidebarP
           })}
         </nav>
 
-        {/* Footer profile info & Sign Out */}
-        <div className="border-t border-stone-200/50 p-4 dark:border-stone-800/50">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex flex-col min-w-0">
-              <span className="text-xs font-bold text-stone-900 dark:text-white truncate">
-                {ownerName}
-              </span>
-              <span className="text-[10px] text-stone-400 uppercase tracking-wider">
-                Cafe Owner
-              </span>
-            </div>
+        {/* Footer profile & Sign Out */}
+        <div className="border-t border-sidebar-border p-4">
+          <div className="mb-4 flex min-w-0 flex-col">
+            <span className="truncate text-xs font-bold text-sidebar-foreground">{ownerName}</span>
+            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              {t('owner.ownerRole')}
+            </span>
           </div>
           <Button
             onClick={() => signOutAction()}
             variant="outline"
-            className="w-full justify-center gap-2 border-stone-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200 dark:border-stone-800 text-sm font-semibold h-10"
+            className="h-10 w-full justify-center gap-2 text-sm font-semibold text-destructive hover:bg-destructive/10 hover:text-destructive"
           >
             <LogOut className="h-4 w-4" />
             <span>{t('auth.logout')}</span>
@@ -127,12 +111,9 @@ export default function OwnerSidebar({ ownerName, signOutAction }: OwnerSidebarP
         </div>
       </aside>
 
-      {/* Overlay for mobile when sidebar is open */}
+      {/* Overlay for mobile */}
       {isOpen && (
-        <div
-          className="fixed inset-0 z-30 bg-black/40 md:hidden"
-          onClick={toggleSidebar}
-        />
+        <div className="fixed inset-0 z-30 bg-foreground/40 md:hidden" onClick={toggleSidebar} />
       )}
     </>
   )

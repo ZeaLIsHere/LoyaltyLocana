@@ -32,7 +32,7 @@ export default async function OwnerLayout({
   }
 
   return (
-    <div className="flex min-h-screen w-full flex-col md:flex-row bg-stone-50 dark:bg-stone-950">
+    <div className="flex min-h-screen w-full flex-col bg-background md:flex-row">
       {/* Sidebar Nav */}
       <OwnerSidebar ownerName={profile.full_name} signOutAction={signOut} />
 
