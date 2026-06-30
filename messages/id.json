@@ -93,7 +93,9 @@
     "loadingCustomer": "Memuat profil customer...",
     "target": "Target {count} stamp",
     "scanOther": "Scan Customer Lain",
-    "rewardEarnedNamed": "Selamat! Reward baru didapatkan: {name}"
+    "rewardEarnedNamed": "Selamat! Reward baru didapatkan: {name}",
+    "uploadQr": "Unggah Foto QR",
+    "qrNotDetected": "QR tidak terbaca dari gambar. Coba foto yang lebih jelas."
   },
   "owner": {
     "dashboard": "Dashboard",

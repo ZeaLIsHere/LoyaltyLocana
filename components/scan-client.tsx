@@ -2,13 +2,21 @@
 
 import { useEffect, useRef, useState, useTransition, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
-import { Html5Qrcode } from 'html5-qrcode'
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode'
 import { toast } from 'sonner'
 import { addStampAction, fetchCustomerScanData, redeemRewardAction } from '@/lib/supabase/actions'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Camera, RefreshCw, UserCheck, Gift } from 'lucide-react'
+import { Camera, RefreshCw, UserCheck, Gift, Upload } from 'lucide-react'
 import { cn } from '@/lib/utils'
+
+// Restrict to QR and use the browser's native BarcodeDetector when available —
+// noticeably better decode accuracy on low-res webcams and uploaded photos.
+const QR_CONFIG = {
+  formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
+  experimentalFeatures: { useBarCodeDetectorIfSupported: true },
+  verbose: false,
+}
 
 interface RewardRuleInfo {
   name: string
@@ -40,6 +48,7 @@ export default function ScanClient() {
 
   const scannerRef = useRef<Html5Qrcode | null>(null)
   const scannedRef = useRef(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const scannerId = 'qr-reader'
 
   const loadCustomerData = useCallback(async (customerId: string) => {
@@ -61,7 +70,7 @@ export default function ScanClient() {
     if (!scannerActive) return
 
     scannedRef.current = false
-    const html5QrCode = new Html5Qrcode(scannerId)
+    const html5QrCode = new Html5Qrcode(scannerId, QR_CONFIG)
     scannerRef.current = html5QrCode
 
     // start() is an async state transition. Keep its promise so cleanup can
@@ -153,6 +162,30 @@ export default function ScanClient() {
     setScannerActive(true)
   }
 
+  // Fallback: decode a QR from an uploaded/captured photo instead of live camera.
+  const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = '' // allow re-selecting the same file later
+    if (!file) return
+
+    // Stop the live camera so it doesn't compete with the file scan.
+    setScannerActive(false)
+    setLoadingCustomer(true)
+
+    const fileScanner = new Html5Qrcode('qr-file-reader', QR_CONFIG)
+    try {
+      const decoded = await fileScanner.scanFile(file, false)
+      scannedRef.current = true
+      fileScanner.clear()
+      await loadCustomerData(decoded)
+    } catch (err) {
+      console.error('Error scanning file:', err)
+      fileScanner.clear()
+      setLoadingCustomer(false)
+      toast.error(t('kasir.qrNotDetected'))
+    }
+  }
+
   return (
     <div className="flex flex-col gap-6 p-5">
       {/* Title */}
@@ -176,6 +209,28 @@ export default function ScanClient() {
           </CardContent>
         </Card>
       )}
+
+      {/* Upload fallback (useful when the live camera can't focus/read) */}
+      {scannerActive && !loadingCustomer && (
+        <Button
+          variant="outline"
+          className="w-full gap-2"
+          onClick={() => fileInputRef.current?.click()}
+        >
+          <Upload className="h-4 w-4" />
+          {t('kasir.uploadQr')}
+        </Button>
+      )}
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleFileSelected}
+      />
+      {/* Off-screen container required by html5-qrcode for scanFile() */}
+      <div id="qr-file-reader" className="hidden" />
 
       {/* Loading State */}
       {loadingCustomer && (

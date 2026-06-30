@@ -93,7 +93,9 @@
     "loadingCustomer": "Loading customer profile...",
     "target": "Target {count} stamps",
     "scanOther": "Scan Another Customer",
-    "rewardEarnedNamed": "Congrats! New reward earned: {name}"
+    "rewardEarnedNamed": "Congrats! New reward earned: {name}",
+    "uploadQr": "Upload QR Photo",
+    "qrNotDetected": "Couldn't read the QR from the image. Try a clearer photo."
   },
   "owner": {
     "dashboard": "Dashboard",
