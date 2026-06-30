@@ -90,6 +90,13 @@ export async function signUpCustomer(formData: FormData) {
     return { success: false, error: progressError.message }
   }
 
+  // Auto-login: establish a session (sets auth cookies via the cookie-based
+  // client) so the new customer goes straight into the app, no separate login
+  // step. If this somehow fails, the account still exists and they can log in
+  // manually — so we don't treat it as a signup failure.
+  const supabase = await createClient()
+  await supabase.auth.signInWithPassword({ email, password })
+
   return { success: true }
 }
 

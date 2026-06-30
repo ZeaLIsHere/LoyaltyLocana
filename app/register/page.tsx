@@ -43,7 +43,11 @@ export default function RegisterPage() {
       }
 
       toast.success(t('auth.registerSuccess'))
-      router.push('/login')
+      // Session is already set by the server action — go straight into the app.
+      // Routing to '/' lets the middleware send the customer to /home (and falls
+      // back to /login if auto-login didn't take).
+      router.push('/')
+      router.refresh()
     })
   }
 
