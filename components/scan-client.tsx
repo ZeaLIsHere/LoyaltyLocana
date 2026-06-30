@@ -52,29 +52,27 @@ export default function ScanClient() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const scannerId = 'qr-reader'
 
-  // `silent` refreshes the customer card in place (after a stamp/redeem) without
-  // the loading spinner, the "scan success" toast, or falling back to the
-  // scanner on error — so the card stays put instead of appearing to reset.
-  const loadCustomerData = useCallback(
-    async (customerId: string, opts?: { silent?: boolean }) => {
-      const silent = opts?.silent ?? false
-      if (!silent) setLoadingCustomer(true)
-      const result = await fetchCustomerScanData(customerId)
-      if (!silent) setLoadingCustomer(false)
+  const loadCustomerData = useCallback(async (customerId: string) => {
+    setLoadingCustomer(true)
+    const result = await fetchCustomerScanData(customerId)
+    setLoadingCustomer(false)
 
-      if (!result.success || !result.customer) {
-        if (!silent) {
-          toast.error(result.error || t('kasir.customerNotFound'))
-          setScannerActive(true)
-        }
-        return
-      }
+    if (!result.success || !result.customer) {
+      toast.error(result.error || t('kasir.customerNotFound'))
+      setScannerActive(true)
+      return
+    }
 
-      setCustomerData(result.customer as CustomerData)
-      if (!silent) toast.success(t('kasir.scanSuccess'))
-    },
-    [t]
-  )
+    setCustomerData(result.customer as CustomerData)
+    toast.success(t('kasir.scanSuccess'))
+  }, [t])
+
+  // Return to the scanner for the next customer (one action per scan).
+  const resetToScanner = useCallback(() => {
+    scannedRef.current = false
+    setCustomerData(null)
+    setScannerActive(true)
+  }, [])
 
   useEffect(() => {
     if (!scannerActive) return
@@ -151,8 +149,8 @@ export default function ScanClient() {
           })
         }
 
-        // Refresh the card in place (keep showing this customer).
-        await loadCustomerData(customerData.id, { silent: true })
+        // Confirmation shown — go straight back to the scanner for the next customer.
+        resetToScanner()
       } finally {
         submittingRef.current = false
       }
@@ -174,18 +172,14 @@ export default function ScanClient() {
         }
 
         toast.success(t('kasir.rewardRedeemed'))
-        await loadCustomerData(customerData.id, { silent: true })
+        resetToScanner()
       } finally {
         submittingRef.current = false
       }
     })
   }
 
-  const handleRescan = () => {
-    scannedRef.current = false
-    setCustomerData(null)
-    setScannerActive(true)
-  }
+  const handleRescan = () => resetToScanner()
 
   // Fallback: decode a QR from an uploaded/captured photo instead of live camera.
   const handleFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {

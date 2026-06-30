@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
@@ -34,6 +34,7 @@ export default function RewardRulesClient({ rules }: RewardRulesClientProps) {
   const t = useTranslations()
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
+  const submittingRef = useRef(false)
 
   const [isOpen, setIsOpen] = useState(false)
   const [editingRule, setEditingRule] = useState<RewardRule | null>(null)
@@ -67,24 +68,31 @@ export default function RewardRulesClient({ rules }: RewardRulesClientProps) {
       toast.error(t('owner.ruleValidationError'))
       return
     }
+    // Guard against rapid double-submits creating duplicate rules.
+    if (submittingRef.current) return
+    submittingRef.current = true
 
     startTransition(async () => {
-      const result = await upsertRewardRuleAction(
-        editingRule ? editingRule.id : null,
-        name,
-        targetStamps,
-        description.trim() || null,
-        isActive
-      )
+      try {
+        const result = await upsertRewardRuleAction(
+          editingRule ? editingRule.id : null,
+          name,
+          targetStamps,
+          description.trim() || null,
+          isActive
+        )
 
-      if (!result.success) {
-        toast.error(result.error || t('common.error'))
-        return
+        if (!result.success) {
+          toast.error(result.error || t('common.error'))
+          return
+        }
+
+        toast.success(editingRule ? t('owner.ruleUpdated') : t('owner.ruleCreated'))
+        setIsOpen(false)
+        router.refresh()
+      } finally {
+        submittingRef.current = false
       }
-
-      toast.success(editingRule ? t('owner.ruleUpdated') : t('owner.ruleCreated'))
-      setIsOpen(false)
-      router.refresh()
     })
   }
 
