@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 import { toast } from 'sonner'
 import { createCashierAction, toggleCashierStatusAction, updateCashierNameAction } from '@/lib/supabase/actions'
 import { Button } from '@/components/ui/button'
@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Plus, Edit, UserPlus } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface CashierProfile {
   id: string
@@ -29,66 +30,57 @@ interface KasirManagementClientProps {
 
 export default function KasirManagementClient({ cashiers }: KasirManagementClientProps) {
   const t = useTranslations()
+  const locale = useLocale()
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
 
-  // Form states
   const [isAddOpen, setIsAddOpen] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [editingCashier, setEditingCashier] = useState<CashierProfile | null>(null)
   const [editName, setEditName] = useState('')
 
-  // Action: Create Cashier
+  const intlLocale = locale === 'id' ? 'id-ID' : 'en-US'
+
   const handleAddSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const formData = new FormData(e.currentTarget)
 
     startTransition(async () => {
       const result = await createCashierAction(formData)
-
       if (!result.success) {
-        toast.error(result.error || 'Gagal menambahkan kasir')
+        toast.error(result.error || t('owner.createKasirError'))
         return
       }
-
-      toast.success('Kasir baru berhasil didaftarkan!')
+      toast.success(t('owner.kasirCreated'))
       setIsAddOpen(false)
       router.refresh()
     })
   }
 
-  // Action: Toggle Active Status
   const handleToggleStatus = (id: string, currentStatus: boolean) => {
     startTransition(async () => {
       const nextStatus = !currentStatus
       const result = await toggleCashierStatusAction(id, nextStatus)
-
       if (!result.success) {
-        toast.error(result.error || 'Gagal memperbarui status kasir')
+        toast.error(result.error || t('common.error'))
         return
       }
-
-      toast.success(
-        nextStatus ? 'Akun kasir diaktifkan kembali.' : 'Akun kasir telah dinonaktifkan.'
-      )
+      toast.success(nextStatus ? t('owner.kasirActivated') : t('owner.kasirDeactivated'))
       router.refresh()
     })
   }
 
-  // Action: Edit Cashier Name
   const handleEditSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!editingCashier || !editName.trim()) return
 
     startTransition(async () => {
       const result = await updateCashierNameAction(editingCashier.id, editName)
-
       if (!result.success) {
-        toast.error(result.error || 'Gagal memperbarui nama kasir')
+        toast.error(result.error || t('common.error'))
         return
       }
-
-      toast.success('Nama kasir diperbarui!')
+      toast.success(t('owner.kasirNameUpdated'))
       setIsEditOpen(false)
       setEditingCashier(null)
       router.refresh()
@@ -96,57 +88,52 @@ export default function KasirManagementClient({ cashiers }: KasirManagementClien
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
+    <div className="animate-in space-y-6 duration-300 fade-in">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-extrabold text-stone-900 dark:text-white tracking-tight">
-            {t('owner.kasirManagement')}
-          </h1>
-          <p className="text-stone-500 dark:text-stone-400 mt-1">
-            Kelola akun kasir yang bertugas melakukan scan stempel & reward.
-          </p>
+          <h1 className="text-3xl tracking-tight text-foreground">{t('owner.kasirManagement')}</h1>
+          <p className="mt-1 text-muted-foreground">{t('owner.kasirManagementSubtitle')}</p>
         </div>
 
-        {/* Add Cashier Dialog */}
         <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-          <DialogTrigger render={
-            <Button className="bg-amber-500 hover:bg-amber-600 font-semibold text-white gap-2 h-11 px-5 shadow-md shadow-amber-500/10">
-              <Plus className="h-4 w-4" />
-              <span>{t('owner.addKasir')}</span>
-            </Button>
-          } />
-          <DialogContent className="border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900">
+          <DialogTrigger
+            render={
+              <Button className="h-11 gap-2 px-5 font-semibold">
+                <Plus className="h-4 w-4" />
+                <span>{t('owner.addKasir')}</span>
+              </Button>
+            }
+          />
+          <DialogContent>
             <form onSubmit={handleAddSubmit}>
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
-                  <UserPlus className="h-5 w-5 text-amber-500" />
-                  <span>Daftarkan Kasir Baru</span>
+                  <UserPlus className="h-5 w-5 text-accent" />
+                  <span>{t('owner.registerKasirTitle')}</span>
                 </DialogTitle>
-                <DialogDescription>
-                  Kasir baru dapat langsung masuk menggunakan email dan password yang Anda tentukan di bawah ini.
-                </DialogDescription>
+                <DialogDescription>{t('owner.registerKasirDesc')}</DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <Label htmlFor="fullName">Nama Lengkap</Label>
-                  <Input id="fullName" name="fullName" placeholder="Nama Kasir" required />
+                  <Label htmlFor="fullName">{t('auth.fullName')}</Label>
+                  <Input id="fullName" name="fullName" placeholder={t('owner.kasirNamePlaceholder')} required />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" name="email" type="email" placeholder="kasir@cafe.com" required />
+                  <Label htmlFor="email">{t('auth.email')}</Label>
+                  <Input id="email" name="email" type="email" placeholder={t('auth.emailPlaceholder')} required />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password">Password Sementara</Label>
-                  <Input id="password" name="password" type="password" placeholder="Minimal 6 karakter" required />
+                  <Label htmlFor="password">{t('owner.tempPasswordLabel')}</Label>
+                  <Input id="password" name="password" type="password" placeholder={t('owner.minCharsHint')} required />
                 </div>
               </div>
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => setIsAddOpen(false)}>
-                  Batal
+                  {t('common.cancel')}
                 </Button>
-                <Button type="submit" disabled={isPending} className="bg-amber-500 hover:bg-amber-600 text-white">
-                  {isPending ? t('common.loading') : 'Daftarkan'}
+                <Button type="submit" disabled={isPending}>
+                  {isPending ? t('common.loading') : t('owner.registerSubmit')}
                 </Button>
               </DialogFooter>
             </form>
@@ -155,42 +142,44 @@ export default function KasirManagementClient({ cashiers }: KasirManagementClien
       </div>
 
       {/* Cashiers Table */}
-      <Card className="border-stone-200/60 shadow-sm dark:border-stone-800">
+      <Card className="border-border shadow-sm">
         <CardContent className="p-0">
           <Table>
-            <TableHeader className="bg-stone-50/50 dark:bg-stone-900/30">
+            <TableHeader className="bg-secondary/40">
               <TableRow>
-                <TableHead className="font-bold text-stone-700 dark:text-stone-300">Nama</TableHead>
-                <TableHead className="font-bold text-stone-700 dark:text-stone-300">Email</TableHead>
-                <TableHead className="font-bold text-stone-700 dark:text-stone-300">Status</TableHead>
-                <TableHead className="font-bold text-stone-700 dark:text-stone-300">Tanggal Dibuat</TableHead>
-                <TableHead className="w-20 text-right"></TableHead>
+                <TableHead className="font-bold text-foreground">{t('auth.fullName')}</TableHead>
+                <TableHead className="font-bold text-foreground">{t('auth.email')}</TableHead>
+                <TableHead className="font-bold text-foreground">{t('owner.status')}</TableHead>
+                <TableHead className="font-bold text-foreground">{t('owner.createdAtCol')}</TableHead>
+                <TableHead className="w-20 text-right" />
               </TableRow>
             </TableHeader>
             <TableBody>
               {cashiers.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-10 text-xs text-stone-400 italic">
-                    Belum ada kasir yang terdaftar.
+                  <TableCell colSpan={5} className="py-10 text-center text-xs italic text-muted-foreground">
+                    {t('owner.noKasir')}
                   </TableCell>
                 </TableRow>
               ) : (
                 cashiers.map((c) => (
-                  <TableRow key={c.id} className="hover:bg-stone-50/50 dark:hover:bg-stone-800/20">
-                    <TableCell className="font-semibold text-stone-950 dark:text-stone-100">
-                      {c.full_name}
-                    </TableCell>
-                    <TableCell className="text-stone-500">{c.email}</TableCell>
+                  <TableRow key={c.id} className="hover:bg-secondary/40">
+                    <TableCell className="font-semibold text-foreground">{c.full_name}</TableCell>
+                    <TableCell className="text-muted-foreground">{c.email}</TableCell>
                     <TableCell>
                       <Badge
                         variant={c.is_active ? 'default' : 'secondary'}
-                        className={c.is_active ? 'bg-emerald-500 text-white' : 'bg-stone-200 text-stone-600 dark:bg-stone-800 dark:text-stone-400'}
+                        className={cn(
+                          c.is_active
+                            ? 'bg-success/15 text-success'
+                            : 'bg-muted text-muted-foreground'
+                        )}
                       >
-                        {c.is_active ? 'Aktif' : 'Nonaktif'}
+                        {c.is_active ? t('owner.active') : t('owner.inactive')}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-stone-400 text-xs">
-                      {new Date(c.created_at).toLocaleDateString('id-ID', {
+                    <TableCell className="text-xs text-muted-foreground">
+                      {new Date(c.created_at).toLocaleDateString(intlLocale, {
                         day: 'numeric',
                         month: 'short',
                         year: 'numeric',
@@ -211,7 +200,8 @@ export default function KasirManagementClient({ cashiers }: KasirManagementClien
                             setEditName(c.full_name)
                             setIsEditOpen(true)
                           }}
-                          className="h-8 w-8 text-stone-500 hover:text-stone-950"
+                          className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                          aria-label={t('owner.editKasir')}
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
@@ -227,25 +217,25 @@ export default function KasirManagementClient({ cashiers }: KasirManagementClien
 
       {/* Edit Cashier Name Dialog */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent className="border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900">
+        <DialogContent>
           <form onSubmit={handleEditSubmit}>
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
-                <Edit className="h-5 w-5 text-amber-500" />
-                <span>Ubah Nama Kasir</span>
+                <Edit className="h-5 w-5 text-accent" />
+                <span>{t('owner.editKasirNameTitle')}</span>
               </DialogTitle>
               <DialogDescription>
-                Perbarui nama kasir ({editingCashier?.email}) untuk tampilan di audit log.
+                {t('owner.editKasirNameDesc', { email: editingCashier?.email ?? '' })}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="editName">Nama Lengkap</Label>
+                <Label htmlFor="editName">{t('auth.fullName')}</Label>
                 <Input
                   id="editName"
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
-                  placeholder="Nama Baru Kasir"
+                  placeholder={t('owner.newKasirNamePlaceholder')}
                   required
                 />
               </div>
@@ -259,10 +249,10 @@ export default function KasirManagementClient({ cashiers }: KasirManagementClien
                   setEditingCashier(null)
                 }}
               >
-                Batal
+                {t('common.cancel')}
               </Button>
-              <Button type="submit" disabled={isPending} className="bg-amber-500 hover:bg-amber-600 text-white">
-                {isPending ? t('common.loading') : 'Simpan'}
+              <Button type="submit" disabled={isPending}>
+                {isPending ? t('common.loading') : t('common.save')}
               </Button>
             </DialogFooter>
           </form>

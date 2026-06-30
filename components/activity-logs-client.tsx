@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useTranslations } from 'next-intl'
+import { useTranslations, useLocale } from 'next-intl'
 import { Card, CardContent } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { RotateCcw, Coffee, ShieldAlert, Award } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface LogItem {
   id: string
@@ -36,8 +37,11 @@ interface ActivityLogsClientProps {
 
 export default function ActivityLogsClient({ logs, cashiers }: ActivityLogsClientProps) {
   const t = useTranslations()
+  const locale = useLocale()
   const router = useRouter()
   const searchParams = useSearchParams()
+
+  const intlLocale = locale === 'id' ? 'id-ID' : 'en-US'
 
   const activeAction = searchParams.get('action') || 'all'
   const activeKasir = searchParams.get('kasirId') || 'all'
@@ -57,46 +61,53 @@ export default function ActivityLogsClient({ logs, cashiers }: ActivityLogsClien
     router.push('/activity-logs')
   }
 
+  const actionLabel = (action: LogItem['action']) =>
+    action === 'add_stamp'
+      ? t('owner.actionAddStamp')
+      : action === 'redeem_reward'
+        ? t('owner.actionRedeem')
+        : t('owner.actionRejected')
+
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
+    <div className="animate-in space-y-6 duration-300 fade-in">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-extrabold text-stone-900 dark:text-white tracking-tight">
-          {t('owner.activityLogs')}
-        </h1>
-        <p className="text-stone-500 dark:text-stone-400 mt-1">
-          Riwayat audit trail lengkap transaksi scan, stempel, dan penukaran reward.
-        </p>
+        <h1 className="text-3xl tracking-tight text-foreground">{t('owner.activityLogs')}</h1>
+        <p className="mt-1 text-muted-foreground">{t('owner.activityLogsSubtitle')}</p>
       </div>
 
       {/* Filter Card */}
-      <Card className="border-stone-200/60 shadow-sm dark:border-stone-800 bg-white/50 dark:bg-stone-900/50 backdrop-blur-sm">
-        <CardContent className="p-4 flex flex-col gap-4 sm:flex-row sm:items-end">
+      <Card className="border-border shadow-sm">
+        <CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:items-end">
           {/* Action Filter */}
           <div className="flex-1 space-y-1.5">
-            <label className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Aksi</label>
+            <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              {t('owner.action')}
+            </label>
             <Select value={activeAction} onValueChange={(val) => handleFilterChange('action', val)}>
-              <SelectTrigger className="bg-white dark:bg-stone-900 focus:ring-amber-500">
-                <SelectValue placeholder="Semua Aksi" />
+              <SelectTrigger>
+                <SelectValue placeholder={t('owner.allActions')} />
               </SelectTrigger>
-              <SelectContent className="bg-white dark:bg-stone-900">
-                <SelectItem value="all">Semua Aksi</SelectItem>
-                <SelectItem value="add_stamp">Tambah Stamp</SelectItem>
-                <SelectItem value="redeem_reward">Redeem Reward</SelectItem>
-                <SelectItem value="rejected_cooldown">Ditolak Cooldown</SelectItem>
+              <SelectContent>
+                <SelectItem value="all">{t('owner.allActions')}</SelectItem>
+                <SelectItem value="add_stamp">{t('owner.actionAddStamp')}</SelectItem>
+                <SelectItem value="redeem_reward">{t('owner.actionRedeem')}</SelectItem>
+                <SelectItem value="rejected_cooldown">{t('owner.actionRejected')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           {/* Cashier Filter */}
           <div className="flex-1 space-y-1.5">
-            <label className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Kasir</label>
+            <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              {t('owner.kasirName')}
+            </label>
             <Select value={activeKasir} onValueChange={(val) => handleFilterChange('kasirId', val)}>
-              <SelectTrigger className="bg-white dark:bg-stone-900 focus:ring-amber-500">
-                <SelectValue placeholder="Semua Kasir" />
+              <SelectTrigger>
+                <SelectValue placeholder={t('owner.allKasir')} />
               </SelectTrigger>
-              <SelectContent className="bg-white dark:bg-stone-900">
-                <SelectItem value="all">Semua Kasir</SelectItem>
+              <SelectContent>
+                <SelectItem value="all">{t('owner.allKasir')}</SelectItem>
                 {cashiers.map((c) => (
                   <SelectItem key={c.id} value={c.id}>
                     {c.full_name}
@@ -108,68 +119,61 @@ export default function ActivityLogsClient({ logs, cashiers }: ActivityLogsClien
 
           {/* Date Filter */}
           <div className="flex-1 space-y-1.5">
-            <label className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">Tanggal</label>
+            <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              {t('owner.date')}
+            </label>
             <Input
               type="date"
               value={activeDate}
               onChange={(e) => handleFilterChange('date', e.target.value)}
-              className="bg-white dark:bg-stone-900 focus:ring-amber-500"
             />
           </div>
 
           {/* Reset Button */}
-          <Button
-            onClick={handleResetFilters}
-            variant="outline"
-            className="border-stone-200 text-stone-600 font-semibold gap-2 shrink-0 h-10 hover:bg-stone-50"
-          >
+          <Button onClick={handleResetFilters} variant="outline" className="h-10 shrink-0 gap-2 font-semibold">
             <RotateCcw className="h-4 w-4" />
-            <span>Reset</span>
+            <span>{t('owner.reset')}</span>
           </Button>
         </CardContent>
       </Card>
 
       {/* Logs Table */}
-      <Card className="border-stone-200/60 shadow-sm dark:border-stone-800">
+      <Card className="border-border shadow-sm">
         <CardContent className="p-0">
           <Table>
-            <TableHeader className="bg-stone-50/50 dark:bg-stone-900/30">
+            <TableHeader className="bg-secondary/40">
               <TableRow>
-                <TableHead className="font-bold text-stone-700 dark:text-stone-300 w-32">Waktu</TableHead>
-                <TableHead className="font-bold text-stone-700 dark:text-stone-300">Customer</TableHead>
-                <TableHead className="font-bold text-stone-700 dark:text-stone-300">Aksi</TableHead>
-                <TableHead className="font-bold text-stone-700 dark:text-stone-300">Detail</TableHead>
-                <TableHead className="font-bold text-stone-700 dark:text-stone-300">Kasir</TableHead>
+                <TableHead className="w-32 font-bold text-foreground">{t('owner.time')}</TableHead>
+                <TableHead className="font-bold text-foreground">{t('owner.customer')}</TableHead>
+                <TableHead className="font-bold text-foreground">{t('owner.action')}</TableHead>
+                <TableHead className="font-bold text-foreground">{t('owner.detail')}</TableHead>
+                <TableHead className="font-bold text-foreground">{t('owner.kasirName')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {logs.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-12 text-xs text-stone-400 italic">
-                    Tidak ditemukan log aktivitas yang sesuai.
+                  <TableCell colSpan={5} className="py-12 text-center text-xs italic text-muted-foreground">
+                    {t('owner.noLogsMatch')}
                   </TableCell>
                 </TableRow>
               ) : (
                 logs.map((log) => {
-                  const badgeVariant: 'default' | 'secondary' | 'outline' = 'outline'
-                  let badgeClass = ''
+                  let badgeClass = 'bg-accent/15 text-accent'
                   let ActionIcon = Coffee
 
-                  if (log.action === 'add_stamp') {
-                    badgeClass = 'bg-amber-500 text-white'
-                    ActionIcon = Coffee
-                  } else if (log.action === 'redeem_reward') {
-                    badgeClass = 'bg-emerald-500 text-white'
+                  if (log.action === 'redeem_reward') {
+                    badgeClass = 'bg-success/15 text-success'
                     ActionIcon = Award
                   } else if (log.action === 'rejected_cooldown') {
-                    badgeClass = 'bg-red-100 text-red-700 border-red-200 dark:bg-red-950/30 dark:text-red-400'
+                    badgeClass = 'bg-destructive/15 text-destructive'
                     ActionIcon = ShieldAlert
                   }
 
                   return (
-                    <TableRow key={log.id} className="hover:bg-stone-50/50 dark:hover:bg-stone-800/20">
-                      <TableCell className="text-stone-400 text-xs font-mono">
-                        {new Date(log.created_at).toLocaleString('id-ID', {
+                    <TableRow key={log.id} className="hover:bg-secondary/40">
+                      <TableCell className="font-mono text-xs text-muted-foreground">
+                        {new Date(log.created_at).toLocaleString(intlLocale, {
                           day: 'numeric',
                           month: 'short',
                           hour: '2-digit',
@@ -177,32 +181,29 @@ export default function ActivityLogsClient({ logs, cashiers }: ActivityLogsClien
                         })}
                       </TableCell>
                       <TableCell>
-                        <div className="flex flex-col min-w-0">
-                          <span className="text-xs font-bold text-stone-800 dark:text-stone-200 truncate">
-                            {log.customer?.full_name || 'Customer'}
+                        <div className="flex min-w-0 flex-col">
+                          <span className="truncate text-xs font-bold text-foreground">
+                            {log.customer?.full_name || t('owner.customer')}
                           </span>
-                          <span className="text-[9px] text-stone-400 truncate">
+                          <span className="truncate text-[9px] text-muted-foreground">
                             {log.customer?.email || '-'}
                           </span>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={badgeVariant} className={`${badgeClass} flex items-center gap-1 w-fit text-[10px]`}>
+                        <Badge
+                          variant="outline"
+                          className={cn('flex w-fit items-center gap-1 border-transparent text-[10px]', badgeClass)}
+                        >
                           <ActionIcon className="h-3 w-3" />
-                          <span>
-                            {log.action === 'add_stamp'
-                              ? 'Tambah Stamp'
-                              : log.action === 'redeem_reward'
-                              ? 'Redeem Reward'
-                              : 'Cooldown Ditolak'}
-                          </span>
+                          <span>{actionLabel(log.action)}</span>
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-stone-500 text-xs max-w-xs truncate">
+                      <TableCell className="max-w-xs truncate text-xs text-muted-foreground">
                         {log.details || '-'}
                       </TableCell>
-                      <TableCell className="text-stone-700 dark:text-stone-300 font-semibold text-xs">
-                        {log.kasir?.full_name || 'Kasir'}
+                      <TableCell className="text-xs font-semibold text-foreground">
+                        {log.kasir?.full_name || t('owner.kasirName')}
                       </TableCell>
                     </TableRow>
                   )

@@ -15,6 +15,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { Plus, Edit, Award } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface RewardRule {
   id: string
@@ -34,11 +35,9 @@ export default function RewardRulesClient({ rules }: RewardRulesClientProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
 
-  // Form Dialog States
   const [isOpen, setIsOpen] = useState(false)
   const [editingRule, setEditingRule] = useState<RewardRule | null>(null)
 
-  // Form Inputs
   const [name, setName] = useState('')
   const [targetStamps, setTargetStamps] = useState(5)
   const [description, setDescription] = useState('')
@@ -65,7 +64,7 @@ export default function RewardRulesClient({ rules }: RewardRulesClientProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!name.trim() || targetStamps <= 0) {
-      toast.error('Nama dan target stamp wajib diisi dengan benar')
+      toast.error(t('owner.ruleValidationError'))
       return
     }
 
@@ -79,11 +78,11 @@ export default function RewardRulesClient({ rules }: RewardRulesClientProps) {
       )
 
       if (!result.success) {
-        toast.error(result.error || 'Gagal menyimpan aturan')
+        toast.error(result.error || t('common.error'))
         return
       }
 
-      toast.success(editingRule ? 'Aturan reward berhasil diperbarui!' : 'Aturan reward baru ditambahkan!')
+      toast.success(editingRule ? t('owner.ruleUpdated') : t('owner.ruleCreated'))
       setIsOpen(false)
       router.refresh()
     })
@@ -100,75 +99,70 @@ export default function RewardRulesClient({ rules }: RewardRulesClientProps) {
       )
 
       if (!result.success) {
-        toast.error(result.error || 'Gagal mengubah status aktif')
+        toast.error(result.error || t('common.error'))
         return
       }
 
-      toast.success(rule.is_active ? 'Aturan dinonaktifkan.' : 'Aturan diaktifkan kembali.')
+      toast.success(rule.is_active ? t('owner.ruleDeactivated') : t('owner.ruleActivated'))
       router.refresh()
     })
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
+    <div className="animate-in space-y-6 duration-300 fade-in">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-extrabold text-stone-900 dark:text-white tracking-tight">
-            {t('owner.rewardRules')}
-          </h1>
-          <p className="text-stone-500 dark:text-stone-400 mt-1">
-            Tentukan jenis reward dan stempel target untuk memicu penukaran bagi customer.
-          </p>
+          <h1 className="text-3xl tracking-tight text-foreground">{t('owner.rewardRules')}</h1>
+          <p className="mt-1 text-muted-foreground">{t('owner.rewardRulesSubtitle')}</p>
         </div>
 
-        <Button
-          onClick={openAddDialog}
-          className="bg-amber-500 hover:bg-amber-600 font-semibold text-white gap-2 h-11 px-5 shadow-md shadow-amber-500/10"
-        >
+        <Button onClick={openAddDialog} className="h-11 gap-2 px-5 font-semibold">
           <Plus className="h-4 w-4" />
           <span>{t('owner.addRewardRule')}</span>
         </Button>
       </div>
 
       {/* Rules Table */}
-      <Card className="border-stone-200/60 shadow-sm dark:border-stone-800">
+      <Card className="border-border shadow-sm">
         <CardContent className="p-0">
           <Table>
-            <TableHeader className="bg-stone-50/50 dark:bg-stone-900/30">
+            <TableHeader className="bg-secondary/40">
               <TableRow>
-                <TableHead className="font-bold text-stone-700 dark:text-stone-300">Nama Reward</TableHead>
-                <TableHead className="font-bold text-stone-700 dark:text-stone-300">Deskripsi</TableHead>
-                <TableHead className="font-bold text-stone-700 dark:text-stone-300">Target Stamp</TableHead>
-                <TableHead className="font-bold text-stone-700 dark:text-stone-300">Status</TableHead>
-                <TableHead className="w-20 text-right"></TableHead>
+                <TableHead className="font-bold text-foreground">{t('owner.rewardName')}</TableHead>
+                <TableHead className="font-bold text-foreground">{t('owner.description')}</TableHead>
+                <TableHead className="font-bold text-foreground">{t('owner.targetStamps')}</TableHead>
+                <TableHead className="font-bold text-foreground">{t('owner.status')}</TableHead>
+                <TableHead className="w-20 text-right" />
               </TableRow>
             </TableHeader>
             <TableBody>
               {rules.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-10 text-xs text-stone-400 italic">
-                    Belum ada aturan reward yang dibuat.
+                  <TableCell colSpan={5} className="py-10 text-center text-xs italic text-muted-foreground">
+                    {t('owner.noRules')}
                   </TableCell>
                 </TableRow>
               ) : (
                 rules.map((rule) => (
-                  <TableRow key={rule.id} className="hover:bg-stone-50/50 dark:hover:bg-stone-800/20">
-                    <TableCell className="font-semibold text-stone-950 dark:text-stone-100">
-                      {rule.name}
-                    </TableCell>
-                    <TableCell className="text-stone-500 text-xs max-w-xs truncate">
+                  <TableRow key={rule.id} className="hover:bg-secondary/40">
+                    <TableCell className="font-semibold text-foreground">{rule.name}</TableCell>
+                    <TableCell className="max-w-xs truncate text-xs text-muted-foreground">
                       {rule.description || '-'}
                     </TableCell>
-                    <TableCell className="font-mono text-xs font-bold">
-                      {rule.target_stamps} Stamp
+                    <TableCell className="font-mono text-xs font-bold text-foreground">
+                      {rule.target_stamps} {t('owner.stamps')}
                     </TableCell>
                     <TableCell>
                       <Badge
                         variant={rule.is_active ? 'default' : 'secondary'}
-                        className={rule.is_active ? 'bg-emerald-500 text-white' : 'bg-stone-200 text-stone-600 dark:bg-stone-800 dark:text-stone-400'}
+                        className={cn(
+                          rule.is_active
+                            ? 'bg-success/15 text-success'
+                            : 'bg-muted text-muted-foreground'
+                        )}
                       >
-                        {rule.is_active ? 'Aktif' : 'Nonaktif'}
+                        {rule.is_active ? t('owner.active') : t('owner.inactive')}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
@@ -182,7 +176,8 @@ export default function RewardRulesClient({ rules }: RewardRulesClientProps) {
                           variant="ghost"
                           size="icon"
                           onClick={() => openEditDialog(rule)}
-                          className="h-8 w-8 text-stone-500 hover:text-stone-950"
+                          className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                          aria-label={t('owner.editRewardRule')}
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
@@ -198,66 +193,64 @@ export default function RewardRulesClient({ rules }: RewardRulesClientProps) {
 
       {/* Upsert Dialog */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900">
+        <DialogContent>
           <form onSubmit={handleSubmit}>
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
-                <Award className="h-5 w-5 text-amber-500" />
-                <span>{editingRule ? 'Edit Aturan Reward' : 'Tambah Aturan Reward'}</span>
+                <Award className="h-5 w-5 text-accent" />
+                <span>{editingRule ? t('owner.editRewardRule') : t('owner.addRewardRule')}</span>
               </DialogTitle>
-              <DialogDescription>
-                Tentukan parameter untuk program loyalty cafe Anda. Target stamp akan memicu pencetusan reward ini ketika customer melakukan pemindaian.
-              </DialogDescription>
+              <DialogDescription>{t('owner.ruleDialogDesc')}</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Nama Reward</Label>
+                <Label htmlFor="name">{t('owner.rewardName')}</Label>
                 <Input
                   id="name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Kopi Gratis / Diskon 20%"
+                  placeholder={t('owner.rewardNamePlaceholder')}
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="targetStamps">Target Stempel</Label>
+                <Label htmlFor="targetStamps">{t('owner.targetStampLabel')}</Label>
                 <Input
                   id="targetStamps"
                   type="number"
                   min={1}
                   value={targetStamps}
                   onChange={(e) => setTargetStamps(parseInt(e.target.value) || 0)}
-                  placeholder="Jumlah stamp untuk memicu reward"
+                  placeholder={t('owner.targetStampsPlaceholder')}
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description">Deskripsi (Opsional)</Label>
+                <Label htmlFor="description">{t('owner.descriptionOptional')}</Label>
                 <Textarea
                   id="description"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Berlaku untuk semua jenis minuman..."
+                  placeholder={t('owner.descriptionPlaceholder')}
                 />
               </div>
 
               <div className="flex items-center justify-between pt-2">
                 <div className="flex flex-col gap-0.5">
-                  <Label htmlFor="isActive">Status Aktif</Label>
-                  <span className="text-[10px] text-stone-400">Pilih untuk menayangkan reward ke customer</span>
+                  <Label htmlFor="isActive">{t('owner.activeStatusLabel')}</Label>
+                  <span className="text-[10px] text-muted-foreground">{t('owner.activeStatusHint')}</span>
                 </div>
                 <Switch checked={isActive} onCheckedChange={setIsActive} id="isActive" />
               </div>
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
-                Batal
+                {t('common.cancel')}
               </Button>
-              <Button type="submit" disabled={isPending} className="bg-amber-500 hover:bg-amber-600 text-white">
-                {isPending ? t('common.loading') : 'Simpan'}
+              <Button type="submit" disabled={isPending}>
+                {isPending ? t('common.loading') : t('common.save')}
               </Button>
             </DialogFooter>
           </form>
