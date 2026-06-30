@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { getMyProfile } from '@/lib/supabase/auth'
 import OwnerSidebar from '@/components/owner-sidebar'
 import { signOut } from '@/lib/supabase/actions'
 
@@ -8,23 +8,7 @@ export default async function OwnerLayout({
 }: {
   children: React.ReactNode
 }) {
-  const supabase = await createClient()
-
-  // Verify authenticated session
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    redirect('/login')
-  }
-
-  // Fetch owner profile
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('full_name, role')
-    .eq('id', user.id)
-    .single()
+  const profile = await getMyProfile()
 
   // Double check user role is owner
   if (!profile || profile.role !== 'owner') {

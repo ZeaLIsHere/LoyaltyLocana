@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { getLocale, getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
+import { getSessionUser } from '@/lib/supabase/auth'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Gift, Calendar, CheckCircle } from 'lucide-react'
@@ -20,15 +21,13 @@ interface RewardRow {
 export default async function CustomerRewardsPage() {
   const t = await getTranslations()
   const locale = await getLocale()
-  const supabase = await createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getSessionUser()
 
   if (!user) {
     redirect('/login')
   }
+
+  const supabase = await createClient()
 
   const { data: rewards } = await supabase
     .from('rewards')

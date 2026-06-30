@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { getLocale, getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
+import { getSessionUser } from '@/lib/supabase/auth'
 import { Coffee, Award, ShieldAlert, Calendar } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -17,15 +18,13 @@ interface HistoryLog {
 export default async function CustomerHistoryPage() {
   const t = await getTranslations()
   const locale = await getLocale()
-  const supabase = await createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getSessionUser()
 
   if (!user) {
     redirect('/login')
   }
+
+  const supabase = await createClient()
 
   const { data: logs } = await supabase
     .from('scan_logs')

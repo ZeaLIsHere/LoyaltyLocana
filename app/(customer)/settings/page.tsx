@@ -1,30 +1,18 @@
 import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'
-import { createClient } from '@/lib/supabase/server'
+import { getSessionUser, getMyProfile } from '@/lib/supabase/auth'
 import SettingsClient from '@/components/settings-client'
 import { signOut } from '@/lib/supabase/actions'
 
 export default async function SettingsPage() {
-  const supabase = await createClient()
-
-  // Get authenticated user
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const user = await getSessionUser()
 
   if (!user) {
     redirect('/login')
   }
 
-  // Fetch profile details
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('full_name, email')
-    .eq('id', user.id)
-    .single()
-
-  // Read current locale cookie
-  const cookieStore = await cookies()
+  // Profile is request-cached; locale cookie read is local.
+  const [profile, cookieStore] = await Promise.all([getMyProfile(), cookies()])
   const currentLocale = cookieStore.get('locale')?.value || 'id'
 
   return (

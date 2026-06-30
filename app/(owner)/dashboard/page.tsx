@@ -7,49 +7,50 @@ export default async function DashboardPage() {
   const locale = await getLocale()
   const intlLocale = locale === 'id' ? 'id-ID' : 'en-US'
 
-  // 1. Fetch total customer count
-  const { count: customerCount } = await supabase
-    .from('profiles')
-    .select('*', { count: 'exact', head: true })
-    .eq('role', 'customer')
-
-  // 2. Fetch scans today (where created_at >= start of today local time mapped to UTC)
   const startOfToday = new Date()
   startOfToday.setHours(0, 0, 0, 0)
-  const { count: scansToday } = await supabase
-    .from('scan_logs')
-    .select('*', { count: 'exact', head: true })
-    .gte('created_at', startOfToday.toISOString())
-
-  // 3. Fetch rewards redeemed count
-  const { count: rewardsRedeemed } = await supabase
-    .from('rewards')
-    .select('*', { count: 'exact', head: true })
-    .eq('status', 'used')
-
-  // 4. Fetch list of customers with stamp progress
-  const { data: customerList } = await supabase
-    .from('profiles')
-    .select(`
-      id,
-      full_name,
-      email,
-      created_at,
-      loyalty_progress (
-        current_stamps
-      )
-    `)
-    .eq('role', 'customer')
-    .order('created_at', { ascending: false })
-    .limit(10)
-
-  // 5. Fetch past 7 days logs for chart
   const sevenDaysAgo = new Date()
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
-  const { data: scanLogs } = await supabase
-    .from('scan_logs')
-    .select('action, created_at')
-    .gte('created_at', sevenDaysAgo.toISOString())
+
+  // All five reads are independent — run them in parallel instead of serial.
+  const [
+    { count: customerCount },
+    { count: scansToday },
+    { count: rewardsRedeemed },
+    { data: customerList },
+    { data: scanLogs },
+  ] = await Promise.all([
+    supabase
+      .from('profiles')
+      .select('*', { count: 'exact', head: true })
+      .eq('role', 'customer'),
+    supabase
+      .from('scan_logs')
+      .select('*', { count: 'exact', head: true })
+      .gte('created_at', startOfToday.toISOString()),
+    supabase
+      .from('rewards')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'used'),
+    supabase
+      .from('profiles')
+      .select(`
+        id,
+        full_name,
+        email,
+        created_at,
+        loyalty_progress (
+          current_stamps
+        )
+      `)
+      .eq('role', 'customer')
+      .order('created_at', { ascending: false })
+      .limit(10),
+    supabase
+      .from('scan_logs')
+      .select('action, created_at')
+      .gte('created_at', sevenDaysAgo.toISOString()),
+  ])
 
   // Format 7 days trend for chart
   const chartData = []

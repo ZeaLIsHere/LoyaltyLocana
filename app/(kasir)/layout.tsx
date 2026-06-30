@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
-import { createClient } from '@/lib/supabase/server'
+import { getMyProfile } from '@/lib/supabase/auth'
 import { Button } from '@/components/ui/button'
 import { signOut } from '@/lib/supabase/actions'
 import { Coffee, LogOut } from 'lucide-react'
@@ -10,22 +10,7 @@ export default async function KasirLayout({
 }: {
   children: React.ReactNode
 }) {
-  const supabase = await createClient()
-  const t = await getTranslations()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    redirect('/login')
-  }
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('full_name, role')
-    .eq('id', user.id)
-    .single()
+  const [t, profile] = await Promise.all([getTranslations(), getMyProfile()])
 
   if (!profile || (profile.role !== 'kasir' && profile.role !== 'owner')) {
     redirect('/login')

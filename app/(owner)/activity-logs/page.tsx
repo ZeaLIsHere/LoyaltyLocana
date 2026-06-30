@@ -15,14 +15,8 @@ export default async function ActivityLogsPage({
   const { date, action, kasirId } = await searchParams
   const supabase = await createClient()
 
-  // 1. Fetch cashiers list for filter dropdown
-  const { data: cashiers } = await supabase
-    .from('profiles')
-    .select('id, full_name')
-    .eq('role', 'kasir')
-
-  // 2. Fetch scan logs with filters
-  let query = supabase
+  // Build the (filtered) scan-logs query
+  let logsQuery = supabase
     .from('scan_logs')
     .select(`
       id,
@@ -40,20 +34,26 @@ export default async function ActivityLogsPage({
     .order('created_at', { ascending: false })
 
   if (action) {
-    query = query.eq('action', action)
+    logsQuery = logsQuery.eq('action', action)
   }
   if (kasirId) {
-    query = query.eq('kasir_id', kasirId)
+    logsQuery = logsQuery.eq('kasir_id', kasirId)
   }
   if (date) {
     const startOfDay = new Date(date)
     startOfDay.setHours(0, 0, 0, 0)
     const endOfDay = new Date(date)
     endOfDay.setHours(23, 59, 59, 999)
-    query = query.gte('created_at', startOfDay.toISOString()).lte('created_at', endOfDay.toISOString())
+    logsQuery = logsQuery
+      .gte('created_at', startOfDay.toISOString())
+      .lte('created_at', endOfDay.toISOString())
   }
 
-  const { data: logs } = await query
+  // Cashiers dropdown + filtered logs are independent — fetch in parallel.
+  const [{ data: cashiers }, { data: logs }] = await Promise.all([
+    supabase.from('profiles').select('id, full_name').eq('role', 'kasir'),
+    logsQuery,
+  ])
 
   interface DatabaseLog {
     id: string
