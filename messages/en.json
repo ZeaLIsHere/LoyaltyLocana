@@ -1,7 +1,8 @@
 {
   "app": {
     "name": "Locana",
-    "tagline": "Digital Loyalty App for Cafes"
+    "tagline": "Digital Loyalty App for Cafes",
+    "greeting": "Hi, {name}!"
   },
   "auth": {
     "login": "Login",
@@ -11,23 +12,46 @@
     "password": "Password",
     "fullName": "Full Name",
     "loginTitle": "Sign in to Locana",
+    "loginSubtitle": "Welcome back, please sign in to your account",
     "registerTitle": "Create New Account",
+    "registerSubtitle": "Sign up to start collecting stamps",
     "noAccount": "Don't have an account?",
     "hasAccount": "Already have an account?",
     "loginButton": "Sign In",
-    "registerButton": "Sign Up"
+    "registerButton": "Sign Up",
+    "emailPlaceholder": "name@email.com",
+    "passwordPlaceholder": "Enter your password",
+    "fullNamePlaceholder": "Enter your full name",
+    "loginError": "Invalid email or password",
+    "registerError": "Failed to create account",
+    "registerSuccess": "Account created successfully"
   },
   "customer": {
     "home": "Home",
     "myQr": "My QR Code",
+    "qrInstruction": "Show this QR to the cashier to earn a stamp",
     "stampProgress": "Stamp Progress",
     "stampsOf": "{current} of {target} stamps",
+    "stampLabel": "Stamp",
     "rewards": "Rewards",
     "history": "History",
     "settings": "Settings",
     "noRewards": "No rewards yet",
+    "noRewardsHint": "Collect stamps to unlock rewards",
     "rewardAvailable": "Available",
-    "rewardUsed": "Used"
+    "rewardUsed": "Used",
+    "cafeRewardTargets": "Cafe Reward Targets",
+    "editName": "Edit Name",
+    "nameUpdated": "Name updated successfully",
+    "nameEmpty": "Name cannot be empty",
+    "rewardEarnedOn": "Earned {date}",
+    "rewardUsedOn": "Used {date}",
+    "historyEmpty": "No visit history yet",
+    "historyTitle": "Visit History",
+    "stampEarned": "+{count} stamp",
+    "profile": "Profile",
+    "almostThere": "Almost there!",
+    "stampsToGo": "{count} more stamps to {reward}"
   },
   "kasir": {
     "scan": "Scan QR",
@@ -41,7 +65,16 @@
     "scanSuccess": "Scan successful!",
     "stampAdded": "Stamp added successfully!",
     "rewardRedeemed": "Reward redeemed successfully!",
-    "cooldownError": "This customer was recently scanned. Please wait a few minutes."
+    "cooldownError": "This customer was recently scanned. Please wait a few minutes.",
+    "scanAgain": "Scan Again",
+    "startScan": "Start Scan",
+    "stopScan": "Stop",
+    "noActiveReward": "No active reward",
+    "cameraError": "Cannot access camera",
+    "rewardEarned": "Congrats! A new reward is unlocked",
+    "invalidQr": "Invalid QR code",
+    "customerNotFound": "Customer not found",
+    "processing": "Processing..."
   },
   "owner": {
     "dashboard": "Dashboard",
@@ -61,7 +94,31 @@
     "rewardName": "Reward Name",
     "description": "Description",
     "active": "Active",
-    "inactive": "Inactive"
+    "inactive": "Inactive",
+    "welcome": "Welcome back",
+    "customersList": "Customers List",
+    "weeklyTrend": "Weekly Trend",
+    "dailyScans": "Daily Scans",
+    "topCustomers": "Top Customers",
+    "kasirName": "Cashier Name",
+    "status": "Status",
+    "action": "Action",
+    "date": "Date",
+    "filterByDate": "Filter by date",
+    "filterByKasir": "Filter by cashier",
+    "allKasir": "All cashiers",
+    "createKasirSuccess": "Cashier account created successfully",
+    "confirmPassword": "Cashier password",
+    "noKasir": "No cashier accounts yet",
+    "noRules": "No reward rules yet",
+    "noLogs": "No activity yet",
+    "customer": "Customer",
+    "stamps": "Stamps",
+    "actionAddStamp": "Add Stamp",
+    "actionRedeem": "Redeem Reward",
+    "actionRejected": "Rejected (cooldown)",
+    "ruleSaved": "Reward rule saved successfully",
+    "statusUpdated": "Status updated successfully"
   },
   "common": {
     "save": "Save",
@@ -80,6 +137,13 @@
     "noData": "No data",
     "language": "Language",
     "indonesian": "Indonesia",
-    "english": "English"
+    "english": "English",
+    "online": "Online",
+    "offline": "Offline",
+    "activate": "Activate",
+    "deactivate": "Deactivate",
+    "theme": "Theme",
+    "optional": "(optional)",
+    "close": "Close"
   }
 }

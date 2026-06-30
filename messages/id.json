@@ -1,7 +1,8 @@
 {
   "app": {
     "name": "Locana",
-    "tagline": "Aplikasi Loyalty Digital untuk Cafe"
+    "tagline": "Aplikasi Loyalty Digital untuk Cafe",
+    "greeting": "Halo, {name}!"
   },
   "auth": {
     "login": "Masuk",
@@ -11,23 +12,46 @@
     "password": "Kata Sandi",
     "fullName": "Nama Lengkap",
     "loginTitle": "Masuk ke Locana",
+    "loginSubtitle": "Selamat datang kembali, silakan masuk ke akunmu",
     "registerTitle": "Buat Akun Baru",
+    "registerSubtitle": "Daftar untuk mulai mengumpulkan stamp",
     "noAccount": "Belum punya akun?",
     "hasAccount": "Sudah punya akun?",
     "loginButton": "Masuk",
-    "registerButton": "Daftar"
+    "registerButton": "Daftar",
+    "emailPlaceholder": "nama@email.com",
+    "passwordPlaceholder": "Masukkan kata sandi",
+    "fullNamePlaceholder": "Masukkan nama lengkap",
+    "loginError": "Email atau kata sandi salah",
+    "registerError": "Gagal membuat akun",
+    "registerSuccess": "Akun berhasil dibuat"
   },
   "customer": {
     "home": "Beranda",
     "myQr": "QR Code Saya",
+    "qrInstruction": "Tunjukkan QR ini ke kasir untuk mendapatkan stamp",
     "stampProgress": "Progress Stamp",
     "stampsOf": "{current} dari {target} stamp",
+    "stampLabel": "Stamp",
     "rewards": "Rewards",
     "history": "Riwayat",
     "settings": "Pengaturan",
     "noRewards": "Belum ada reward",
+    "noRewardsHint": "Kumpulkan stamp untuk membuka reward",
     "rewardAvailable": "Tersedia",
-    "rewardUsed": "Sudah Digunakan"
+    "rewardUsed": "Sudah Digunakan",
+    "cafeRewardTargets": "Target Reward Cafe",
+    "editName": "Ubah Nama",
+    "nameUpdated": "Nama berhasil diperbarui",
+    "nameEmpty": "Nama tidak boleh kosong",
+    "rewardEarnedOn": "Diperoleh {date}",
+    "rewardUsedOn": "Digunakan {date}",
+    "historyEmpty": "Belum ada riwayat kunjungan",
+    "historyTitle": "Riwayat Kunjungan",
+    "stampEarned": "+{count} stamp",
+    "profile": "Profil",
+    "almostThere": "Sedikit lagi!",
+    "stampsToGo": "{count} stamp lagi menuju {reward}"
   },
   "kasir": {
     "scan": "Scan QR",
@@ -41,7 +65,16 @@
     "scanSuccess": "Scan berhasil!",
     "stampAdded": "Stamp berhasil ditambahkan!",
     "rewardRedeemed": "Reward berhasil di-redeem!",
-    "cooldownError": "Customer ini baru saja discan. Silakan tunggu beberapa menit."
+    "cooldownError": "Customer ini baru saja discan. Silakan tunggu beberapa menit.",
+    "scanAgain": "Scan Lagi",
+    "startScan": "Mulai Scan",
+    "stopScan": "Hentikan",
+    "noActiveReward": "Tidak ada reward aktif",
+    "cameraError": "Tidak bisa mengakses kamera",
+    "rewardEarned": "Selamat! Reward baru terbuka",
+    "invalidQr": "QR code tidak valid",
+    "customerNotFound": "Customer tidak ditemukan",
+    "processing": "Memproses..."
   },
   "owner": {
     "dashboard": "Dashboard",
@@ -61,7 +94,31 @@
     "rewardName": "Nama Reward",
     "description": "Deskripsi",
     "active": "Aktif",
-    "inactive": "Nonaktif"
+    "inactive": "Nonaktif",
+    "welcome": "Selamat datang kembali",
+    "customersList": "Daftar Customer",
+    "weeklyTrend": "Tren Mingguan",
+    "dailyScans": "Scan Harian",
+    "topCustomers": "Customer Teraktif",
+    "kasirName": "Nama Kasir",
+    "status": "Status",
+    "action": "Aksi",
+    "date": "Tanggal",
+    "filterByDate": "Filter tanggal",
+    "filterByKasir": "Filter kasir",
+    "allKasir": "Semua kasir",
+    "createKasirSuccess": "Akun kasir berhasil dibuat",
+    "confirmPassword": "Password kasir",
+    "noKasir": "Belum ada akun kasir",
+    "noRules": "Belum ada aturan reward",
+    "noLogs": "Belum ada aktivitas",
+    "customer": "Customer",
+    "stamps": "Stamp",
+    "actionAddStamp": "Tambah Stamp",
+    "actionRedeem": "Redeem Reward",
+    "actionRejected": "Ditolak (cooldown)",
+    "ruleSaved": "Aturan reward berhasil disimpan",
+    "statusUpdated": "Status berhasil diperbarui"
   },
   "common": {
     "save": "Simpan",
@@ -80,6 +137,13 @@
     "noData": "Tidak ada data",
     "language": "Bahasa",
     "indonesian": "Indonesia",
-    "english": "English"
+    "english": "English",
+    "online": "Online",
+    "offline": "Offline",
+    "activate": "Aktifkan",
+    "deactivate": "Nonaktifkan",
+    "theme": "Tema",
+    "optional": "(opsional)",
+    "close": "Tutup"
   }
 }
