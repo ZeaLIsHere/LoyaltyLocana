@@ -39,6 +39,7 @@ export default function ScanClient() {
   const [loadingCustomer, setLoadingCustomer] = useState<boolean>(false)
 
   const scannerRef = useRef<Html5Qrcode | null>(null)
+  const scannedRef = useRef(false)
   const scannerId = 'qr-reader'
 
   const loadCustomerData = useCallback(async (customerId: string) => {
@@ -57,50 +58,52 @@ export default function ScanClient() {
   }, [t])
 
   useEffect(() => {
-    if (!scannerActive) {
-      if (scannerRef.current && scannerRef.current.isScanning) {
-        scannerRef.current.stop().catch((err) => console.error('Error stopping scanner:', err))
-      }
-      return
-    }
+    if (!scannerActive) return
 
-    const startScanner = async () => {
-      try {
-        const html5QrCode = new Html5Qrcode(scannerId)
-        scannerRef.current = html5QrCode
+    scannedRef.current = false
+    const html5QrCode = new Html5Qrcode(scannerId)
+    scannerRef.current = html5QrCode
 
-        await html5QrCode.start(
-          { facingMode: 'environment' },
-          {
-            fps: 10,
-            qrbox: (width, height) => {
-              const size = Math.min(width, height) * 0.7
-              return { width: size, height: size }
-            },
+    // start() is an async state transition. Keep its promise so cleanup can
+    // wait for it to settle before calling stop() — this is what prevents the
+    // "Cannot transition to a new state, already under transition" error
+    // (triggered by StrictMode's double-mount and by stopping mid-scan).
+    const startPromise = html5QrCode
+      .start(
+        { facingMode: 'environment' },
+        {
+          fps: 10,
+          qrbox: (width, height) => {
+            const size = Math.min(width, height) * 0.7
+            return { width: size, height: size }
           },
-          (decodedText) => {
-            setScannerActive(false)
-            loadCustomerData(decodedText)
-          },
-          () => {
-            // Ignore continuous per-frame scan errors during detection.
-          }
-        )
-      } catch (err) {
+        },
+        (decodedText) => {
+          // Only the first successful decode should trigger a load.
+          if (scannedRef.current) return
+          scannedRef.current = true
+          // Do NOT stop() here (we'd be inside an active transition). Flipping
+          // state runs this effect's cleanup, which stops safely once start()
+          // has settled.
+          setScannerActive(false)
+          loadCustomerData(decodedText)
+        },
+        () => {
+          // Ignore continuous per-frame scan errors during detection.
+        }
+      )
+      .catch((err) => {
         console.error('Error starting scanner:', err)
         toast.error(t('kasir.cameraError'))
-      }
-    }
-
-    const timer = setTimeout(() => {
-      startScanner()
-    }, 300)
+      })
 
     return () => {
-      clearTimeout(timer)
-      if (scannerRef.current && scannerRef.current.isScanning) {
-        scannerRef.current.stop().catch((err) => console.error('Error stopping scanner during cleanup:', err))
-      }
+      // Wait for start() to finish its transition, then stop safely.
+      startPromise.finally(() => {
+        if (html5QrCode.isScanning) {
+          html5QrCode.stop().catch((err) => console.error('Error stopping scanner:', err))
+        }
+      })
     }
   }, [scannerActive, loadCustomerData, t])
 
@@ -145,6 +148,7 @@ export default function ScanClient() {
   }
 
   const handleRescan = () => {
+    scannedRef.current = false
     setCustomerData(null)
     setScannerActive(true)
   }
