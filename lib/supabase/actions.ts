@@ -1,6 +1,6 @@
 'use server'
 
-import { createClient } from './server'
+import { createClient, createServiceClient } from './server'
 import { redirect } from 'next/navigation'
 
 export async function signIn(formData: FormData) {
@@ -94,8 +94,29 @@ export async function fetchCustomerScanData(customerId: string) {
   try {
     const supabase = await createClient()
 
+    // Validate the caller is staff (kasir/owner) before reading customer data.
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    if (!user) {
+      return { success: false, error: 'Sesi kasir berakhir, silakan login kembali' }
+    }
+    const { data: caller } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+    if (!caller || (caller.role !== 'kasir' && caller.role !== 'owner')) {
+      return { success: false, error: 'Akses ditolak' }
+    }
+
+    // Customer profiles aren't readable by a kasir under RLS (own-or-owner
+    // only), so read customer data with the service client. Safe here because
+    // the caller was just validated as staff above.
+    const admin = await createServiceClient()
+
     // 1. Get customer profile
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile, error: profileError } = await admin
       .from('profiles')
       .select('id, full_name, email, role, is_active')
       .eq('id', customerId)
@@ -114,14 +135,14 @@ export async function fetchCustomerScanData(customerId: string) {
     }
 
     // 2. Get stamp progress
-    const { data: progress } = await supabase
+    const { data: progress } = await admin
       .from('loyalty_progress')
       .select('current_stamps')
       .eq('customer_id', customerId)
       .single()
 
     // 3. Get available rewards with rule details
-    const { data: rewards } = await supabase
+    const { data: rewards } = await admin
       .from('rewards')
       .select(`
         id,

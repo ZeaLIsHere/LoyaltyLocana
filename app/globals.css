@@ -138,3 +138,16 @@
     letter-spacing: -0.01em;
   }
 }
+
+/* html5-qrcode injects its own <video>/<canvas>; make them fill the square
+   container instead of overflowing (which clipped the bottom of the feed). */
+#qr-reader {
+  border: none !important;
+}
+#qr-reader video,
+#qr-reader canvas {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover;
+  display: block;
+}
