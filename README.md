@@ -53,6 +53,11 @@ Buka dashboard **Supabase** -> **SQL Editor** -> **New Query**, tempelkan isi be
 3. Membuat trigger otomatis untuk melengkapi profil & loyalty progress customer saat mereka melakukan sign-up.
 4. Mendaftarkan RPC postgres function (`add_stamp`, `redeem_reward`) untuk operasi yang aman dan mutabel.
 
+**Jalankan juga migrasi perbaikan RLS** (wajib, mencegah error *infinite recursion* pada policy `profiles`):
+- **File Migrasi**: [supabase/migrations/20260630010000_fix_rls_recursion.sql](file:///e:/Locana-Loyalty/supabase/migrations/20260630010000_fix_rls_recursion.sql)
+
+Tempelkan isinya di **SQL Editor** dan jalankan setelah migrasi skema di atas. Migrasi ini membuat helper `get_my_role()`, `is_owner()`, `is_staff()` (SECURITY DEFINER) lalu membangun ulang policy SELECT tanpa subquery rekursif ke `profiles`. Jika memakai Supabase CLI, cukup `supabase db push` untuk menjalankan kedua migrasi sesuai urutan timestamp.
+
 ### 4. Membuat Akun Owner Pertama (Seeding)
 Guna masuk pertama kali sebagai Owner, Anda dapat memicu pembuatan akun secara manual. 
 Buka dashboard **Supabase** -> **Authentication** -> **Add User** -> **Create User**:
