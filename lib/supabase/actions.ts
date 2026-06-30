@@ -41,18 +41,18 @@ export async function signUpCustomer(formData: FormData) {
     return { success: false, error: 'Sandi minimal 6 karakter' }
   }
 
-  const supabase = await createClient()
+  // Create the customer with email pre-confirmed so they can log in immediately
+  // (no email-confirmation step). The on_auth_user_created trigger still reads
+  // user_metadata to populate public.profiles and public.loyalty_progress.
+  const admin = await createServiceClient()
 
-  // Register with metadata so trigger on_auth_user_created automatically
-  // populates public.profiles and public.loyalty_progress
-  const { error } = await supabase.auth.signUp({
+  const { error } = await admin.auth.admin.createUser({
     email,
     password,
-    options: {
-      data: {
-        full_name: fullName,
-        role: 'customer',
-      },
+    email_confirm: true,
+    user_metadata: {
+      full_name: fullName,
+      role: 'customer',
     },
   })
 
