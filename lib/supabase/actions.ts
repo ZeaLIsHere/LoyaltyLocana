@@ -69,6 +69,27 @@ export async function signOut() {
   redirect('/login')
 }
 
+export async function updateProfileName(fullName: string) {
+  try {
+    const supabase = await createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    if (!user) return { success: false, error: 'Sesi berakhir, silakan login kembali' }
+    const trimmed = fullName.trim()
+    if (!trimmed) return { success: false, error: 'Nama tidak boleh kosong' }
+    const { error } = await supabase
+      .from('profiles')
+      .update({ full_name: trimmed, updated_at: new Date().toISOString() })
+      .eq('id', user.id)
+    if (error) return { success: false, error: error.message }
+    return { success: true }
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'Gagal memperbarui nama'
+    return { success: false, error: message }
+  }
+}
+
 export async function fetchCustomerScanData(customerId: string) {
   try {
     const supabase = await createClient()

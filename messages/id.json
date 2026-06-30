@@ -62,7 +62,10 @@
     "actionStampTitle": "Mendapat Stempel",
     "actionRedeemTitle": "Penukaran Reward",
     "actionRejectedTitle": "Scan Ditolak (Cooldown)",
-    "stampDetailFallback": "Stempel berhasil ditambahkan"
+    "stampDetailFallback": "Stempel berhasil ditambahkan",
+    "settingsSubtitle": "Atur akun dan bahasa aplikasimu",
+    "languageDescription": "Pilih bahasa antarmuka Locana",
+    "account": "Akun"
   },
   "kasir": {
     "scan": "Scan QR",

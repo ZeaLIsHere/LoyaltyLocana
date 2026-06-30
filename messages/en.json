@@ -62,7 +62,10 @@
     "actionStampTitle": "Stamp Earned",
     "actionRedeemTitle": "Reward Redeemed",
     "actionRejectedTitle": "Scan Rejected (Cooldown)",
-    "stampDetailFallback": "Stamp added successfully"
+    "stampDetailFallback": "Stamp added successfully",
+    "settingsSubtitle": "Manage your account and app language",
+    "languageDescription": "Choose the Locana interface language",
+    "account": "Account"
   },
   "kasir": {
     "scan": "Scan QR",
