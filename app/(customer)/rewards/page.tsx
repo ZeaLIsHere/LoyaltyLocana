@@ -1,9 +1,9 @@
 import { redirect } from 'next/navigation'
-import { getTranslations } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Gift, Award, Calendar, CheckCircle } from 'lucide-react'
+import { Gift, Calendar, CheckCircle } from 'lucide-react'
 
 interface RewardRow {
   id: string
@@ -19,9 +19,9 @@ interface RewardRow {
 
 export default async function CustomerRewardsPage() {
   const t = await getTranslations()
+  const locale = await getLocale()
   const supabase = await createClient()
 
-  // Get authenticated user
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -30,7 +30,6 @@ export default async function CustomerRewardsPage() {
     redirect('/login')
   }
 
-  // Fetch customer's rewards
   const { data: rewards } = await supabase
     .from('rewards')
     .select(`
@@ -49,32 +48,37 @@ export default async function CustomerRewardsPage() {
 
   const formattedRewards = ((rewards || []) as unknown as RewardRow[]).map((r) => {
     const rulesData = Array.isArray(r.reward_rules) ? r.reward_rules[0] : r.reward_rules
-    return {
-      ...r,
-      reward_rules: rulesData || null,
-    }
+    return { ...r, reward_rules: rulesData || null }
   })
 
   const availableRewards = formattedRewards.filter((r) => r.status === 'available')
   const usedRewards = formattedRewards.filter((r) => r.status === 'used')
 
+  const fmtDate = (value: string) =>
+    new Date(value).toLocaleDateString(locale === 'id' ? 'id-ID' : 'en-US', {
+      day: 'numeric',
+      month: 'short',
+    })
+
   return (
-    <div className="flex flex-col gap-6 p-6 animate-in fade-in duration-300">
+    <div className="flex animate-in flex-col gap-6 p-5 duration-300 fade-in">
       <div>
-        <h1 className="text-xl font-bold text-stone-900 dark:text-white">
-          {t('customer.rewards')}
-        </h1>
-        <p className="text-xs text-stone-500 dark:text-stone-400">
-          Lihat daftar hadiah yang telah Anda kumpulkan.
-        </p>
+        <h1 className="text-2xl tracking-tight text-foreground">{t('customer.rewards')}</h1>
+        <p className="text-xs text-muted-foreground">{t('customer.rewardsSubtitle')}</p>
       </div>
 
       <Tabs defaultValue="available" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 bg-stone-100 dark:bg-stone-850 p-1 rounded-xl">
-          <TabsTrigger value="available" className="rounded-lg py-2 font-semibold text-xs data-[state=active]:bg-white data-[state=active]:text-amber-600 dark:data-[state=active]:bg-stone-900">
+        <TabsList className="grid w-full grid-cols-2 rounded-xl bg-muted p-1">
+          <TabsTrigger
+            value="available"
+            className="rounded-lg py-2 text-xs font-semibold data-[state=active]:bg-card data-[state=active]:text-accent"
+          >
             {t('customer.rewardAvailable')} ({availableRewards.length})
           </TabsTrigger>
-          <TabsTrigger value="used" className="rounded-lg py-2 font-semibold text-xs data-[state=active]:bg-white data-[state=active]:text-amber-600 dark:data-[state=active]:bg-stone-900">
+          <TabsTrigger
+            value="used"
+            className="rounded-lg py-2 text-xs font-semibold data-[state=active]:bg-card data-[state=active]:text-accent"
+          >
             {t('customer.rewardUsed')} ({usedRewards.length})
           </TabsTrigger>
         </TabsList>
@@ -82,37 +86,33 @@ export default async function CustomerRewardsPage() {
         <TabsContent value="available" className="mt-4 flex flex-col gap-3">
           {availableRewards.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
-              <Gift className="h-10 w-10 text-stone-300 mb-2" />
-              <p className="text-sm font-medium text-stone-500">{t('customer.noRewards')}</p>
-              <p className="text-xs text-stone-400 mt-1">Kumpulkan stamp untuk klaim hadiah!</p>
+              <Gift className="mb-2 h-10 w-10 text-muted-foreground" />
+              <p className="text-sm font-medium text-foreground">{t('customer.noRewards')}</p>
+              <p className="mt-1 text-xs text-muted-foreground">{t('customer.noRewardsHint')}</p>
             </div>
           ) : (
             availableRewards.map((reward) => (
-              <Card key={reward.id} className="border-amber-200 bg-amber-50/20 dark:border-amber-950/30 dark:bg-amber-950/10">
+              <Card key={reward.id} className="border-accent/40 bg-accent/5">
                 <CardHeader className="flex flex-row items-center gap-3 p-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600 dark:bg-amber-950/50">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent/15 text-accent">
                     <Gift className="h-5 w-5" />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <CardTitle className="text-sm font-bold text-stone-900 dark:text-white truncate">
-                      {reward.reward_rules?.name || 'Free Coffee'}
+                  <div className="min-w-0 flex-1">
+                    <CardTitle className="truncate text-sm font-bold text-card-foreground">
+                      {reward.reward_rules?.name}
                     </CardTitle>
-                    <CardDescription className="text-[10px] text-stone-500 dark:text-stone-400 truncate mt-0.5">
-                      {reward.reward_rules?.description || 'Dapatkan hadiah Anda di kasir.'}
-                    </CardDescription>
+                    <p className="mt-0.5 truncate text-[10px] text-muted-foreground">
+                      {reward.reward_rules?.description || t('customer.redeemAtCashier')}
+                    </p>
                   </div>
                 </CardHeader>
-                <CardContent className="px-4 pb-4 pt-0 flex justify-between items-center text-[10px] text-stone-400">
-                  <span className="flex items-center gap-1 font-medium text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-950/50 px-2 py-0.5 rounded-full">
-                    Siap Ditukarkan
+                <CardContent className="flex items-center justify-between px-4 pb-4 pt-0 text-[10px] text-muted-foreground">
+                  <span className="rounded-full bg-success/15 px-2 py-0.5 font-medium text-success">
+                    {t('customer.readyToRedeem')}
                   </span>
                   <span className="flex items-center gap-1">
                     <Calendar className="h-3 w-3" />
-                    Didapat:{' '}
-                    {new Date(reward.earned_at).toLocaleDateString('id-ID', {
-                      day: 'numeric',
-                      month: 'short',
-                    })}
+                    {t('customer.rewardEarnedOn', { date: fmtDate(reward.earned_at) })}
                   </span>
                 </CardContent>
               </Card>
@@ -123,36 +123,32 @@ export default async function CustomerRewardsPage() {
         <TabsContent value="used" className="mt-4 flex flex-col gap-3">
           {usedRewards.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
-              <Gift className="h-10 w-10 text-stone-300 mb-2" />
-              <p className="text-sm font-medium text-stone-500">Belum ada riwayat penukaran</p>
+              <Gift className="mb-2 h-10 w-10 text-muted-foreground" />
+              <p className="text-sm font-medium text-foreground">{t('customer.usedHistoryEmpty')}</p>
             </div>
           ) : (
             usedRewards.map((reward) => (
-              <Card key={reward.id} className="border-stone-200/60 dark:border-stone-850">
+              <Card key={reward.id} className="border-border">
                 <CardHeader className="flex flex-row items-center gap-3 p-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-stone-100 text-stone-500 dark:bg-stone-800 dark:text-stone-400">
-                    <Award className="h-5 w-5" />
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                    <CheckCircle className="h-5 w-5" />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <CardTitle className="text-sm font-bold text-stone-900 dark:text-white truncate">
-                      {reward.reward_rules?.name || 'Free Coffee'}
+                  <div className="min-w-0 flex-1">
+                    <CardTitle className="truncate text-sm font-bold text-card-foreground">
+                      {reward.reward_rules?.name}
                     </CardTitle>
-                    <CardDescription className="text-[10px] text-stone-400 truncate mt-0.5">
-                      {reward.reward_rules?.description || 'Telah dinikmati'}
-                    </CardDescription>
+                    <p className="mt-0.5 truncate text-[10px] text-muted-foreground">
+                      {reward.reward_rules?.description}
+                    </p>
                   </div>
                 </CardHeader>
-                <CardContent className="px-4 pb-4 pt-0 flex justify-between items-center text-[10px] text-stone-400">
-                  <span className="flex items-center gap-1 text-emerald-700 bg-emerald-50 dark:bg-emerald-950/20 dark:text-emerald-400 px-2 py-0.5 rounded-full">
-                    <CheckCircle className="h-2.5 w-2.5" /> Sudah Digunakan
+                <CardContent className="flex items-center justify-between px-4 pb-4 pt-0 text-[10px] text-muted-foreground">
+                  <span className="rounded-full bg-muted px-2 py-0.5 font-medium text-muted-foreground">
+                    {t('customer.rewardUsed')}
                   </span>
                   <span>
-                    Ditukar:{' '}
                     {reward.used_at
-                      ? new Date(reward.used_at).toLocaleDateString('id-ID', {
-                          day: 'numeric',
-                          month: 'short',
-                        })
+                      ? t('customer.rewardUsedOn', { date: fmtDate(reward.used_at) })
                       : '-'}
                   </span>
                 </CardContent>

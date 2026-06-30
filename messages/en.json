@@ -51,7 +51,18 @@
     "stampEarned": "+{count} stamp",
     "profile": "Profile",
     "almostThere": "Almost there!",
-    "stampsToGo": "{count} more stamps to {reward}"
+    "stampsToGo": "{count} more stamps to {reward}",
+    "rewardsSubtitle": "See the rewards you've collected",
+    "readyToRedeem": "Ready to redeem",
+    "redeemAtCashier": "Show this to the cashier to redeem",
+    "usedHistoryEmpty": "No redemption history yet",
+    "historySubtitle": "Your stamp and redemption history",
+    "historyEmptyHint": "Scan your QR at the cashier to get started",
+    "servedBy": "Served by {name}",
+    "actionStampTitle": "Stamp Earned",
+    "actionRedeemTitle": "Reward Redeemed",
+    "actionRejectedTitle": "Scan Rejected (Cooldown)",
+    "stampDetailFallback": "Stamp added successfully"
   },
   "kasir": {
     "scan": "Scan QR",

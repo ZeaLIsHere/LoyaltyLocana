@@ -51,7 +51,18 @@
     "stampEarned": "+{count} stamp",
     "profile": "Profil",
     "almostThere": "Sedikit lagi!",
-    "stampsToGo": "{count} stamp lagi menuju {reward}"
+    "stampsToGo": "{count} stamp lagi menuju {reward}",
+    "rewardsSubtitle": "Lihat daftar hadiah yang telah kamu kumpulkan",
+    "readyToRedeem": "Siap ditukarkan",
+    "redeemAtCashier": "Tunjukkan ke kasir untuk menukar hadiah",
+    "usedHistoryEmpty": "Belum ada riwayat penukaran",
+    "historySubtitle": "Riwayat stempel dan penukaran hadiahmu",
+    "historyEmptyHint": "Scan QR-mu di kasir untuk memulai",
+    "servedBy": "Dilayani oleh {name}",
+    "actionStampTitle": "Mendapat Stempel",
+    "actionRedeemTitle": "Penukaran Reward",
+    "actionRejectedTitle": "Scan Ditolak (Cooldown)",
+    "stampDetailFallback": "Stempel berhasil ditambahkan"
   },
   "kasir": {
     "scan": "Scan QR",
