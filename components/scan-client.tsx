@@ -48,23 +48,33 @@ export default function ScanClient() {
 
   const scannerRef = useRef<Html5Qrcode | null>(null)
   const scannedRef = useRef(false)
+  const submittingRef = useRef(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const scannerId = 'qr-reader'
 
-  const loadCustomerData = useCallback(async (customerId: string) => {
-    setLoadingCustomer(true)
-    const result = await fetchCustomerScanData(customerId)
-    setLoadingCustomer(false)
+  // `silent` refreshes the customer card in place (after a stamp/redeem) without
+  // the loading spinner, the "scan success" toast, or falling back to the
+  // scanner on error — so the card stays put instead of appearing to reset.
+  const loadCustomerData = useCallback(
+    async (customerId: string, opts?: { silent?: boolean }) => {
+      const silent = opts?.silent ?? false
+      if (!silent) setLoadingCustomer(true)
+      const result = await fetchCustomerScanData(customerId)
+      if (!silent) setLoadingCustomer(false)
 
-    if (!result.success || !result.customer) {
-      toast.error(result.error || t('kasir.customerNotFound'))
-      setScannerActive(true)
-      return
-    }
+      if (!result.success || !result.customer) {
+        if (!silent) {
+          toast.error(result.error || t('kasir.customerNotFound'))
+          setScannerActive(true)
+        }
+        return
+      }
 
-    setCustomerData(result.customer as CustomerData)
-    toast.success(t('kasir.scanSuccess'))
-  }, [t])
+      setCustomerData(result.customer as CustomerData)
+      if (!silent) toast.success(t('kasir.scanSuccess'))
+    },
+    [t]
+  )
 
   useEffect(() => {
     if (!scannerActive) return
@@ -118,41 +128,56 @@ export default function ScanClient() {
 
   const handleAddStamp = () => {
     if (!customerData) return
+    // Re-entrancy guard: ignore rapid repeat clicks while a request is in
+    // flight (belt-and-suspenders on top of the disabled button + server lock).
+    if (submittingRef.current) return
+    submittingRef.current = true
 
     startTransition(async () => {
-      const result = await addStampAction(customerData.id)
+      try {
+        const result = await addStampAction(customerData.id)
 
-      if (!result.success) {
-        toast.error(result.error || t('kasir.cooldownError'))
-        return
+        if (!result.success) {
+          toast.error(result.error || t('kasir.cooldownError'))
+          return
+        }
+
+        toast.success(result.message || t('kasir.stampAdded'))
+
+        if (result.rewardEarned) {
+          toast.success(t('kasir.rewardEarnedNamed', { name: result.rewardName }), {
+            duration: 5000,
+            icon: <Gift className="h-5 w-5" />,
+          })
+        }
+
+        // Refresh the card in place (keep showing this customer).
+        await loadCustomerData(customerData.id, { silent: true })
+      } finally {
+        submittingRef.current = false
       }
-
-      toast.success(result.message || t('kasir.stampAdded'))
-
-      if (result.rewardEarned) {
-        toast.success(t('kasir.rewardEarnedNamed', { name: result.rewardName }), {
-          duration: 5000,
-          icon: <Gift className="h-5 w-5" />,
-        })
-      }
-
-      loadCustomerData(customerData.id)
     })
   }
 
   const handleRedeemReward = (rewardId: string) => {
     if (!customerData) return
+    if (submittingRef.current) return
+    submittingRef.current = true
 
     startTransition(async () => {
-      const result = await redeemRewardAction(rewardId)
+      try {
+        const result = await redeemRewardAction(rewardId)
 
-      if (!result.success) {
-        toast.error(result.error || t('common.error'))
-        return
+        if (!result.success) {
+          toast.error(result.error || t('common.error'))
+          return
+        }
+
+        toast.success(t('kasir.rewardRedeemed'))
+        await loadCustomerData(customerData.id, { silent: true })
+      } finally {
+        submittingRef.current = false
       }
-
-      toast.success(t('kasir.rewardRedeemed'))
-      loadCustomerData(customerData.id)
     })
   }
 
