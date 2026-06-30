@@ -1,0 +1,3 @@
+-- Locana - SQL Migration Placeholder
+-- Full migration will be created in Stage 2 (Supabase setup)
+-- This file confirms the migration directory structure is in place
