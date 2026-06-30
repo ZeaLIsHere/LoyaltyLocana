@@ -42,11 +42,10 @@ export async function signUpCustomer(formData: FormData) {
   }
 
   // Create the customer with email pre-confirmed so they can log in immediately
-  // (no email-confirmation step). The on_auth_user_created trigger still reads
-  // user_metadata to populate public.profiles and public.loyalty_progress.
+  // (no email-confirmation step).
   const admin = await createServiceClient()
 
-  const { error } = await admin.auth.admin.createUser({
+  const { data: created, error } = await admin.auth.admin.createUser({
     email,
     password,
     email_confirm: true,
@@ -56,8 +55,39 @@ export async function signUpCustomer(formData: FormData) {
     },
   })
 
-  if (error) {
-    return { success: false, error: error.message }
+  if (error || !created.user) {
+    return { success: false, error: error?.message || 'Gagal membuat akun' }
+  }
+
+  // Defense-in-depth: create the profile + loyalty_progress explicitly instead
+  // of relying on the on_auth_user_created DB trigger. This guarantees the
+  // customer is scannable right away on any Supabase project (incl. a fresh
+  // Vercel deploy) even if the trigger isn't installed. upsert() is a no-op if
+  // the trigger already created the rows.
+  const userId = created.user.id
+
+  const { error: profileError } = await admin.from('profiles').upsert(
+    {
+      id: userId,
+      role: 'customer',
+      full_name: fullName,
+      email,
+      is_active: true,
+    },
+    { onConflict: 'id' }
+  )
+
+  if (profileError) {
+    return { success: false, error: profileError.message }
+  }
+
+  const { error: progressError } = await admin.from('loyalty_progress').upsert(
+    { customer_id: userId, current_stamps: 0 },
+    { onConflict: 'customer_id' }
+  )
+
+  if (progressError) {
+    return { success: false, error: progressError.message }
   }
 
   return { success: true }
