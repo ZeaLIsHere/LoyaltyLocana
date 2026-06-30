@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import { getTranslations } from 'next-intl/server'
 import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { signOut } from '@/lib/supabase/actions'
@@ -10,6 +11,7 @@ export default async function KasirLayout({
   children: React.ReactNode
 }) {
   const supabase = await createClient()
+  const t = await getTranslations()
 
   const {
     data: { user },
@@ -19,41 +21,38 @@ export default async function KasirLayout({
     redirect('/login')
   }
 
-  // Fetch cashier profile name
   const { data: profile } = await supabase
     .from('profiles')
     .select('full_name, role')
     .eq('id', user.id)
     .single()
 
-  // double check role just in case
   if (!profile || (profile.role !== 'kasir' && profile.role !== 'owner')) {
     redirect('/login')
   }
 
   return (
-    <div className="flex min-h-screen w-full justify-center bg-stone-100 dark:bg-stone-950">
+    <div className="flex min-h-screen w-full justify-center bg-muted">
       {/* Mobile-focused centered frame */}
-      <div className="relative flex min-h-screen w-full max-w-md flex-col bg-white shadow-xl dark:bg-stone-900 border-x border-stone-200/50 dark:border-stone-800/50">
-        
+      <div className="relative flex min-h-screen w-full max-w-md flex-col border-x border-border bg-background shadow-xl">
         {/* Header Bar */}
-        <header className="sticky top-0 z-50 flex h-16 items-center justify-between border-b border-stone-200/60 bg-white/95 px-6 dark:border-stone-800 dark:bg-stone-900/95 backdrop-blur-md">
+        <header className="sticky top-0 z-50 flex h-16 items-center justify-between border-b border-border bg-background/90 px-5 backdrop-blur-md">
           <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-500 text-white shadow-sm">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <Coffee className="h-4 w-4" />
-            </div>
-            <div>
-              <span className="text-sm font-bold text-stone-900 dark:text-white">
-                Locana
+            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-lg tracking-tight text-foreground [font-family:var(--font-heading)]">
+                {t('app.name')}
               </span>
-              <span className="ml-2 rounded bg-amber-100 px-1.5 py-0.5 text-[9px] font-bold text-amber-700 uppercase dark:bg-amber-950/50 dark:text-amber-400">
+              <span className="rounded bg-accent/15 px-1.5 py-0.5 text-[9px] font-bold uppercase text-accent">
                 {profile.role}
               </span>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
-            <span className="text-xs font-semibold text-stone-500 dark:text-stone-400 max-w-[100px] truncate">
+            <span className="max-w-[100px] truncate text-xs font-semibold text-muted-foreground">
               {profile.full_name}
             </span>
             <form action={signOut}>
@@ -61,7 +60,8 @@ export default async function KasirLayout({
                 type="submit"
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-stone-500 hover:text-red-500 dark:text-stone-400"
+                className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                aria-label={t('auth.logout')}
               >
                 <LogOut className="h-4 w-4" />
               </Button>

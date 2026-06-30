@@ -88,7 +88,12 @@
     "rewardEarned": "Congrats! A new reward is unlocked",
     "invalidQr": "Invalid QR code",
     "customerNotFound": "Customer not found",
-    "processing": "Processing..."
+    "processing": "Processing...",
+    "searchingCamera": "Searching for camera...",
+    "loadingCustomer": "Loading customer profile...",
+    "target": "Target {count} stamps",
+    "scanOther": "Scan Another Customer",
+    "rewardEarnedNamed": "Congrats! New reward earned: {name}"
   },
   "owner": {
     "dashboard": "Dashboard",

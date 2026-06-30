@@ -88,7 +88,12 @@
     "rewardEarned": "Selamat! Reward baru terbuka",
     "invalidQr": "QR code tidak valid",
     "customerNotFound": "Customer tidak ditemukan",
-    "processing": "Memproses..."
+    "processing": "Memproses...",
+    "searchingCamera": "Mencari kamera...",
+    "loadingCustomer": "Memuat profil customer...",
+    "target": "Target {count} stamp",
+    "scanOther": "Scan Customer Lain",
+    "rewardEarnedNamed": "Selamat! Reward baru didapatkan: {name}"
   },
   "owner": {
     "dashboard": "Dashboard",
