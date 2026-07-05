@@ -21,7 +21,15 @@ export default async function OwnerLayout({
       <OwnerSidebar ownerName={profile.full_name} signOutAction={signOut} />
 
       {/* Main Panel */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="relative flex-1 flex flex-col min-w-0">
+        {/* Partner logo (top-right). pointer-events-none so it never blocks a
+            page's own top-right controls even if they overlap. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/logo-bca.png"
+          alt="bakti BCA"
+          className="pointer-events-none absolute right-6 top-5 z-20 h-6 w-auto object-contain md:right-10 md:top-8"
+        />
         <main className="flex-1 p-6 md:p-10">{children}</main>
       </div>
     </div>

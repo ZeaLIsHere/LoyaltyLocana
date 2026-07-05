@@ -4,7 +4,7 @@ import { useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { toast } from 'sonner'
-import { upsertRewardRuleAction } from '@/lib/supabase/actions'
+import { upsertRewardRuleAction, deleteRewardRuleAction } from '@/lib/supabase/actions'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
-import { Plus, Edit, Award } from 'lucide-react'
+import { Plus, Edit, Award, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface RewardRule {
@@ -38,6 +38,7 @@ export default function RewardRulesClient({ rules }: RewardRulesClientProps) {
 
   const [isOpen, setIsOpen] = useState(false)
   const [editingRule, setEditingRule] = useState<RewardRule | null>(null)
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
 
   const [name, setName] = useState('')
   const [targetStamps, setTargetStamps] = useState(5)
@@ -116,6 +117,24 @@ export default function RewardRulesClient({ rules }: RewardRulesClientProps) {
     })
   }
 
+  // Delete now lives inside the edit dialog and is guarded by a confirmation
+  // dialog (no more native confirm()).
+  const handleDeleteRule = () => {
+    if (!editingRule) return
+    startTransition(async () => {
+      const result = await deleteRewardRuleAction(editingRule.id)
+      if (!result.success) {
+        toast.error(result.error || t('common.error'))
+        return
+      }
+      toast.success(t('owner.ruleDeleted'))
+      setConfirmDeleteOpen(false)
+      setIsOpen(false)
+      setEditingRule(null)
+      router.refresh()
+    })
+  }
+
   return (
     <div className="animate-in space-y-6 duration-300 fade-in">
       {/* Header */}
@@ -124,13 +143,13 @@ export default function RewardRulesClient({ rules }: RewardRulesClientProps) {
           <h1 className="text-3xl tracking-tight text-foreground">{t('owner.rewardRules')}</h1>
           <p className="mt-1 text-muted-foreground">{t('owner.rewardRulesSubtitle')}</p>
         </div>
-
+ 
         <Button onClick={openAddDialog} className="h-11 gap-2 px-5 font-semibold">
           <Plus className="h-4 w-4" />
           <span>{t('owner.addRewardRule')}</span>
         </Button>
       </div>
-
+ 
       {/* Rules Table */}
       <Card className="border-border shadow-sm">
         <CardContent className="p-0">
@@ -141,7 +160,7 @@ export default function RewardRulesClient({ rules }: RewardRulesClientProps) {
                 <TableHead className="font-bold text-foreground">{t('owner.description')}</TableHead>
                 <TableHead className="font-bold text-foreground">{t('owner.targetStamps')}</TableHead>
                 <TableHead className="font-bold text-foreground">{t('owner.status')}</TableHead>
-                <TableHead className="w-20 text-right" />
+                <TableHead className="w-24 text-right" />
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -174,7 +193,7 @@ export default function RewardRulesClient({ rules }: RewardRulesClientProps) {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-3">
+                      <div className="flex items-center justify-end gap-2">
                         <Switch
                           checked={rule.is_active}
                           onCheckedChange={() => handleToggleActive(rule)}
@@ -254,6 +273,21 @@ export default function RewardRulesClient({ rules }: RewardRulesClientProps) {
               </div>
             </div>
             <DialogFooter>
+              {editingRule && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => {
+                    setIsOpen(false)
+                    setConfirmDeleteOpen(true)
+                  }}
+                  disabled={isPending}
+                  className="gap-1.5 text-destructive hover:bg-destructive/10 hover:text-destructive sm:mr-auto"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  {t('owner.deleteRule')}
+                </Button>
+              )}
               <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
                 {t('common.cancel')}
               </Button>
@@ -262,6 +296,43 @@ export default function RewardRulesClient({ rules }: RewardRulesClientProps) {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete confirmation (opened from the edit dialog) */}
+      <Dialog open={confirmDeleteOpen} onOpenChange={(open) => !open && setConfirmDeleteOpen(false)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="h-5 w-5" />
+              {t('common.confirmDeleteTitle')}
+            </DialogTitle>
+            <DialogDescription>{t('common.confirmDelete')}</DialogDescription>
+          </DialogHeader>
+          <div className="rounded-lg border border-border bg-secondary/40 p-3 text-sm">
+            <p className="font-semibold text-foreground">{editingRule?.name}</p>
+            <p className="text-xs text-muted-foreground">
+              {editingRule?.target_stamps} {t('owner.stamps')}
+            </p>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setConfirmDeleteOpen(false)}
+              disabled={isPending}
+            >
+              {t('common.cancel')}
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleDeleteRule}
+              disabled={isPending}
+            >
+              {isPending ? t('common.loading') : t('common.delete')}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

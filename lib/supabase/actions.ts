@@ -32,6 +32,7 @@ export async function signUpCustomer(formData: FormData) {
   const email = formData.get('email') as string
   const password = formData.get('password') as string
   const fullName = formData.get('fullName') as string
+  const birthDate = formData.get('birthDate') as string
 
   if (!email || !password || !fullName) {
     return { success: false, error: 'Semua kolom wajib diisi' }
@@ -52,6 +53,7 @@ export async function signUpCustomer(formData: FormData) {
     user_metadata: {
       full_name: fullName,
       role: 'customer',
+      birth_date: birthDate || null,
     },
   })
 
@@ -73,6 +75,7 @@ export async function signUpCustomer(formData: FormData) {
       full_name: fullName,
       email,
       is_active: true,
+      birth_date: birthDate || null,
     },
     { onConflict: 'id' }
   )
@@ -106,7 +109,7 @@ export async function signOut() {
   redirect('/login')
 }
 
-export async function updateProfileName(fullName: string) {
+export async function updateProfileNameAndBirth(fullName: string, birthDate: string | null) {
   try {
     const supabase = await createClient()
     const {
@@ -117,12 +120,16 @@ export async function updateProfileName(fullName: string) {
     if (!trimmed) return { success: false, error: 'Nama tidak boleh kosong' }
     const { error } = await supabase
       .from('profiles')
-      .update({ full_name: trimmed, updated_at: new Date().toISOString() })
+      .update({ 
+        full_name: trimmed, 
+        birth_date: birthDate || null,
+        updated_at: new Date().toISOString() 
+      })
       .eq('id', user.id)
     if (error) return { success: false, error: error.message }
     return { success: true }
   } catch (e) {
-    const message = e instanceof Error ? e.message : 'Gagal memperbarui nama'
+    const message = e instanceof Error ? e.message : 'Gagal memperbarui profil'
     return { success: false, error: message }
   }
 }
@@ -178,50 +185,24 @@ export async function fetchCustomerScanData(customerId: string) {
       .eq('customer_id', customerId)
       .single()
 
-    // 3. Get available rewards with rule details
-    const { data: rewards } = await admin
-      .from('rewards')
-      .select(`
-        id,
-        status,
-        earned_at,
-        reward_rules (
-          name,
-          description,
-          target_stamps
-        )
-      `)
-      .eq('customer_id', customerId)
-      .eq('status', 'available')
+    // 3. Get the active reward rules the cashier can redeem against. In the
+    //    spend model there are no pre-granted rewards: the cashier picks a rule
+    //    and the RPC spends the customer's stamp balance.
+    const { data: rules } = await admin
+      .from('reward_rules')
+      .select('id, name, description, target_stamps')
+      .eq('is_active', true)
+      .order('target_stamps', { ascending: true })
 
-    interface SupabaseRewardRow {
-      id: string
-      status: string
-      earned_at: string
-      reward_rules: {
-        name: string
-        description: string | null
-        target_stamps: number
-      } | Array<{
-        name: string
-        description: string | null
-        target_stamps: number
-      }> | null
-    }
+    const formattedRules = (rules || []).map((r) => ({
+      id: r.id,
+      name: r.name,
+      description: r.description,
+      target_stamps: r.target_stamps,
+    }))
 
-    const formattedRewards = ((rewards || []) as unknown as SupabaseRewardRow[]).map((r) => {
-      const rulesData = Array.isArray(r.reward_rules) ? r.reward_rules[0] : r.reward_rules
-      return {
-        id: r.id,
-        status: r.status,
-        earned_at: r.earned_at,
-        reward_rules: rulesData ? {
-          name: rulesData.name,
-          description: rulesData.description,
-          target_stamps: rulesData.target_stamps,
-        } : null,
-      }
-    })
+    // Balance cap = highest active target (matches the add_stamp RPC).
+    const maxTarget = formattedRules.reduce((m, r) => Math.max(m, r.target_stamps), 0)
 
     return {
       success: true,
@@ -230,7 +211,8 @@ export async function fetchCustomerScanData(customerId: string) {
         fullName: profile.full_name,
         email: profile.email,
         currentStamps: progress?.current_stamps || 0,
-        rewards: formattedRewards,
+        maxTarget,
+        rules: formattedRules,
       },
     }
   } catch (error) {
@@ -265,13 +247,53 @@ export async function addStampAction(customerId: string) {
 
     return {
       success: result.success,
+      // Surface the RPC's own message as `error` on failure so the UI can show
+      // the real reason (cooldown / card full) instead of a generic fallback.
+      error: result.success ? undefined : result.message,
       message: result.message,
       newStamps: result.new_stamps,
+      cardFull: result.card_full ?? false,
       rewardEarned: result.reward_earned,
       rewardName: result.reward_name,
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Gagal menambahkan stamp'
+    return { success: false, error: message }
+  }
+}
+
+export async function redeemRewardRuleAction(customerId: string, ruleId: string) {
+  try {
+    const supabase = await createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+      return { success: false, error: 'Sesi kasir berakhir, silakan login kembali' }
+    }
+
+    const { data, error } = await supabase.rpc('redeem_reward_rule', {
+      p_customer_id: customerId,
+      p_rule_id: ruleId,
+      p_kasir_id: user.id,
+    })
+
+    if (error) {
+      return { success: false, error: error.message }
+    }
+
+    const result = typeof data === 'string' ? JSON.parse(data) : data
+
+    return {
+      success: result.success,
+      error: result.success ? undefined : result.message,
+      message: result.message,
+      newStamps: result.new_stamps,
+      rewardName: result.reward_name,
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Gagal menukarkan reward'
     return { success: false, error: message }
   }
 }
@@ -305,6 +327,51 @@ export async function redeemRewardAction(rewardId: string) {
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Gagal menukarkan reward'
+    return { success: false, error: message }
+  }
+}
+
+// Owner-only: aggregate stats for a single customer (lifetime stamps earned and
+// rewards redeemed) for the customer detail dialog. Counts only — no row data.
+export async function fetchCustomerDetail(customerId: string) {
+  try {
+    const supabase = await createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    if (!user) {
+      return { success: false, error: 'Sesi berakhir, silakan login kembali' }
+    }
+
+    const { data: caller } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+    if (!caller || caller.role !== 'owner') {
+      return { success: false, error: 'Akses ditolak' }
+    }
+
+    const [{ count: lifetimeStamps }, { count: rewardsRedeemed }] = await Promise.all([
+      supabase
+        .from('scan_logs')
+        .select('*', { count: 'exact', head: true })
+        .eq('customer_id', customerId)
+        .eq('action', 'add_stamp'),
+      supabase
+        .from('rewards')
+        .select('*', { count: 'exact', head: true })
+        .eq('customer_id', customerId)
+        .eq('status', 'used'),
+    ])
+
+    return {
+      success: true,
+      lifetimeStamps: lifetimeStamps || 0,
+      rewardsRedeemed: rewardsRedeemed || 0,
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Gagal memuat detail customer'
     return { success: false, error: message }
   }
 }
@@ -496,5 +563,142 @@ export async function upsertRewardRuleAction(
     return { success: false, error: message }
   }
 }
+
+export async function deleteRewardRuleAction(id: string) {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { success: false, error: 'Sesi berakhir' }
+
+    // Check owner role
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    if (!profile || profile.role !== 'owner') {
+      return { success: false, error: 'Akses ditolak' }
+    }
+
+    const { error } = await supabase
+      .from('reward_rules')
+      .delete()
+      .eq('id', id)
+
+    if (error) return { success: false, error: error.message }
+    return { success: true }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Gagal menghapus aturan reward'
+    return { success: false, error: message }
+  }
+}
+
+export async function deleteCashierAction(cashierId: string) {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { success: false, error: 'Sesi berakhir' }
+
+    // Check owner role
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    if (!profile || profile.role !== 'owner') {
+      return { success: false, error: 'Akses ditolak' }
+    }
+
+    // Call service client to delete auth user, which cascades to public.profiles
+    const { createServiceClient } = await import('./server')
+    const adminSupabase = await createServiceClient()
+
+    const { error } = await adminSupabase.auth.admin.deleteUser(cashierId)
+    if (error) return { success: false, error: error.message }
+
+    return { success: true }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Gagal menghapus kasir'
+    return { success: false, error: message }
+  }
+}
+
+// Owner-only: edit a customer's profile (name + birth date). RLS only allows a
+// user to update their OWN profile, so we use the service client after
+// validating the caller is an owner.
+export async function updateCustomerAction(
+  customerId: string,
+  fullName: string,
+  birthDate: string | null
+) {
+  try {
+    const supabase = await createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    if (!user) return { success: false, error: 'Sesi berakhir' }
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+    if (!profile || profile.role !== 'owner') {
+      return { success: false, error: 'Akses ditolak' }
+    }
+
+    const trimmed = fullName.trim()
+    if (!trimmed) return { success: false, error: 'Nama tidak boleh kosong' }
+
+    const admin = await createServiceClient()
+    const { error } = await admin
+      .from('profiles')
+      .update({
+        full_name: trimmed,
+        birth_date: birthDate || null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', customerId)
+      .eq('role', 'customer')
+
+    if (error) return { success: false, error: error.message }
+    return { success: true }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Gagal memperbarui customer'
+    return { success: false, error: message }
+  }
+}
+
+// Owner-only: permanently delete a customer (auth user + cascaded profile).
+export async function deleteCustomerAction(customerId: string) {
+  try {
+    const supabase = await createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    if (!user) return { success: false, error: 'Sesi berakhir' }
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+    if (!profile || profile.role !== 'owner') {
+      return { success: false, error: 'Akses ditolak' }
+    }
+
+    const admin = await createServiceClient()
+    const { error } = await admin.auth.admin.deleteUser(customerId)
+    if (error) return { success: false, error: error.message }
+
+    return { success: true }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Gagal menghapus customer'
+    return { success: false, error: message }
+  }
+}
+
 
 

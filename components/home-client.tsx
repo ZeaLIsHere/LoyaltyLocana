@@ -41,9 +41,9 @@ export default function HomeClient({
     }
   }, [customerId])
 
-  // Lowest-target rule drives the main stamp grid.
-  const mainRule = rules.length > 0 ? rules[0] : null
-  const mainTarget = mainRule ? mainRule.target_stamps : 10
+  // Spend model: the stamp balance fills up to the highest reward target (the
+  // balance cap), so the main card shows progress toward that top reward.
+  const mainTarget = rules.length > 0 ? Math.max(...rules.map((r) => r.target_stamps)) : 10
   const mainProgressPercent = Math.min((currentStamps / mainTarget) * 100, 100)
 
   return (
@@ -100,13 +100,35 @@ export default function HomeClient({
                 <div
                   key={index}
                   className={cn(
-                    'flex aspect-square items-center justify-center rounded-full border transition-all duration-300',
+                    'relative aspect-square rounded-full transition-all duration-300',
                     isEarned
-                      ? 'border-accent bg-accent text-accent-foreground shadow-md shadow-accent/20'
-                      : 'border-border bg-muted text-muted-foreground'
+                      ? 'bg-card shadow-md shadow-accent/15'
+                      : 'bg-muted'
                   )}
                 >
-                  <Coffee className="h-4 w-4" />
+                  {/* Dashed ring border (decorative PNG replaces the CSS border) */}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="/border-circle.png"
+                    alt=""
+                    aria-hidden="true"
+                    className={cn(
+                      // brightness-0 recolors the pale cream ring to a dark, visible
+                      // silhouette on the light theme (dark:invert keeps it visible on dark).
+                      'pointer-events-none absolute left-1/2 top-1/2 h-[220%] w-[220%] max-w-none -translate-x-1/2 -translate-y-1/2 object-contain brightness-0 transition-opacity duration-300 dark:brightness-100',
+                      isEarned ? 'opacity-60' : 'opacity-30'
+                    )}
+                  />
+                  {/* Cup appears only once the stamp is earned; before that the
+                      slot is just the ring + empty circle. */}
+                  {isEarned && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src="/icon.png"
+                      alt=""
+                      className="pointer-events-none absolute left-1/2 top-1/2 h-[128%] w-[128%] max-w-none -translate-x-1/2 -translate-y-1/2 object-contain"
+                    />
+                  )}
                 </div>
               )
             })}
@@ -145,7 +167,14 @@ export default function HomeClient({
                     <Gift className="h-5 w-5" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-xs font-bold text-foreground">{rule.name}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="truncate text-xs font-bold text-foreground">{rule.name}</p>
+                      {currentStamps >= rule.target_stamps && (
+                        <span className="shrink-0 rounded-full bg-success/15 px-2 py-0.5 text-[9px] font-semibold text-success">
+                          {t('customer.readyToRedeem')}
+                        </span>
+                      )}
+                    </div>
                     <p className="truncate text-[10px] text-muted-foreground">
                       {rule.description || `${rule.target_stamps} ${t('customer.stampLabel')}`}
                     </p>

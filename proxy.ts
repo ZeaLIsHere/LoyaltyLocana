@@ -6,7 +6,7 @@ const publicRoutes = ['/login', '/register']
 
 // Role-based route access
 const roleRoutes: Record<string, string[]> = {
-  owner: ['/dashboard', '/kasir-management', '/reward-rules', '/activity-logs'],
+  owner: ['/dashboard', '/customers', '/kasir-management', '/reward-rules', '/activity-logs'],
   kasir: ['/scan'],
   customer: ['/home', '/rewards', '/history', '/settings'],
 }

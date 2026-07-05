@@ -4,10 +4,18 @@ import { useEffect, useRef, useState, useTransition, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode'
 import { toast } from 'sonner'
-import { addStampAction, fetchCustomerScanData, redeemRewardAction } from '@/lib/supabase/actions'
+import { addStampAction, fetchCustomerScanData, redeemRewardRuleAction } from '@/lib/supabase/actions'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Camera, RefreshCw, UserCheck, Gift, Upload } from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Camera, RefreshCw, UserCheck, Gift, Upload, CheckCircle2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 // Restrict to QR and use the browser's native BarcodeDetector when available —
@@ -18,17 +26,17 @@ const QR_CONFIG = {
   verbose: false,
 }
 
-interface RewardRuleInfo {
+// After returning to the live scanner, the previous customer's QR is often still
+// in the camera frame. Ignore a re-read of that SAME code for this long so we
+// don't instantly reopen the customer we just finished with. A different
+// customer's QR is never guarded and loads immediately.
+const RESCAN_GUARD_MS = 3000
+
+interface RuleItem {
+  id: string
   name: string
   description: string | null
   target_stamps: number
-}
-
-interface RewardItem {
-  id: string
-  status: string
-  earned_at: string
-  reward_rules: RewardRuleInfo | null
 }
 
 interface CustomerData {
@@ -36,7 +44,8 @@ interface CustomerData {
   fullName: string
   email: string
   currentStamps: number
-  rewards: RewardItem[]
+  maxTarget: number
+  rules: RuleItem[]
 }
 
 export default function ScanClient() {
@@ -45,9 +54,17 @@ export default function ScanClient() {
   const [scannerActive, setScannerActive] = useState<boolean>(true)
   const [isPending, startTransition] = useTransition()
   const [loadingCustomer, setLoadingCustomer] = useState<boolean>(false)
+  // Reward pending confirmation (opens the confirm dialog) and the just-redeemed
+  // reward (drives the "give the product" success screen).
+  const [confirmRule, setConfirmRule] = useState<RuleItem | null>(null)
+  const [redeemedReward, setRedeemedReward] = useState<{ name: string; newStamps: number } | null>(
+    null
+  )
 
   const scannerRef = useRef<Html5Qrcode | null>(null)
   const scannedRef = useRef(false)
+  const lastScannedRef = useRef<string | null>(null)
+  const rescanGuardUntilRef = useRef<number>(0)
   const submittingRef = useRef(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const scannerId = 'qr-reader'
@@ -70,6 +87,12 @@ export default function ScanClient() {
   // Return to the scanner for the next customer (one action per scan).
   const resetToScanner = useCallback(() => {
     scannedRef.current = false
+    // Ignore the just-scanned customer's QR for a short grace window so it isn't
+    // re-read while still sitting in the camera frame (which made "Scan other
+    // customer" appear to jump straight back to the same profile).
+    rescanGuardUntilRef.current = Date.now() + RESCAN_GUARD_MS
+    setConfirmRule(null)
+    setRedeemedReward(null)
     setCustomerData(null)
     setScannerActive(true)
   }, [])
@@ -90,15 +113,29 @@ export default function ScanClient() {
         { facingMode: 'environment' },
         {
           fps: 10,
-          qrbox: (width, height) => {
-            const size = Math.min(width, height) * 0.7
+          qrbox: (viewfinderWidth, viewfinderHeight) => {
+            // Clamp to html5-qrcode's 50px minimum. On a small or freshly
+            // re-mounting viewfinder the 0.7 scale can drop below 50px, which
+            // throws "minimum size of 'config.qrbox' dimension value is 50px."
+            const edge = Math.min(viewfinderWidth, viewfinderHeight)
+            const size = Math.max(50, Math.floor(edge * 0.7))
             return { width: size, height: size }
           },
         },
         (decodedText) => {
           // Only the first successful decode should trigger a load.
           if (scannedRef.current) return
+          // Skip a re-read of the customer we just handled while their QR is
+          // still in frame (grace window set by resetToScanner). A different
+          // customer's code is never guarded and loads right away.
+          if (
+            decodedText === lastScannedRef.current &&
+            Date.now() < rescanGuardUntilRef.current
+          ) {
+            return
+          }
           scannedRef.current = true
+          lastScannedRef.current = decodedText
           // Do NOT stop() here (we'd be inside an active transition). Flipping
           // state runs this effect's cleanup, which stops safely once start()
           // has settled.
@@ -136,18 +173,13 @@ export default function ScanClient() {
         const result = await addStampAction(customerData.id)
 
         if (!result.success) {
-          toast.error(result.error || t('kasir.cooldownError'))
+          toast.error(
+            result.cardFull ? t('kasir.cardFull') : result.error || t('kasir.cooldownError')
+          )
           return
         }
 
-        toast.success(result.message || t('kasir.stampAdded'))
-
-        if (result.rewardEarned) {
-          toast.success(t('kasir.rewardEarnedNamed', { name: result.rewardName }), {
-            duration: 5000,
-            icon: <Gift className="h-5 w-5" />,
-          })
-        }
+        toast.success(t('kasir.stampAdded'))
 
         // Confirmation shown — go straight back to the scanner for the next customer.
         resetToScanner()
@@ -157,22 +189,27 @@ export default function ScanClient() {
     })
   }
 
-  const handleRedeemReward = (rewardId: string) => {
-    if (!customerData) return
+  // Tapping "Redeem" opens a confirmation dialog first (spending stamps is hard
+  // to undo). Confirming performs the redemption and shows the success screen.
+  const requestRedeem = (rule: RuleItem) => setConfirmRule(rule)
+
+  const confirmRedeem = () => {
+    if (!customerData || !confirmRule) return
     if (submittingRef.current) return
     submittingRef.current = true
+    const rule = confirmRule
 
     startTransition(async () => {
       try {
-        const result = await redeemRewardAction(rewardId)
+        const result = await redeemRewardRuleAction(customerData.id, rule.id)
 
         if (!result.success) {
           toast.error(result.error || t('common.error'))
           return
         }
 
-        toast.success(t('kasir.rewardRedeemed'))
-        resetToScanner()
+        setConfirmRule(null)
+        setRedeemedReward({ name: rule.name, newStamps: result.newStamps ?? 0 })
       } finally {
         submittingRef.current = false
       }
@@ -195,6 +232,7 @@ export default function ScanClient() {
     try {
       const decoded = await fileScanner.scanFile(file, false)
       scannedRef.current = true
+      lastScannedRef.current = decoded
       fileScanner.clear()
       await loadCustomerData(decoded)
     } catch (err) {
@@ -260,7 +298,7 @@ export default function ScanClient() {
       )}
 
       {/* Scanned Customer Details */}
-      {customerData && !loadingCustomer && (
+      {customerData && !loadingCustomer && !redeemedReward && (
         <div className="flex animate-in flex-col gap-6 duration-300 fade-in slide-in-from-bottom-4">
           <Card className="border-border shadow-md">
             <CardHeader className="flex flex-row items-center gap-4 bg-accent/10 p-4">
@@ -299,41 +337,53 @@ export default function ScanClient() {
                 </div>
               </div>
 
-              {/* Available Rewards */}
+              {/* Redeemable rewards (spend model): pick a rule the balance covers */}
               <div className="space-y-3">
                 <span className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                   {t('kasir.availableRewards')}
                 </span>
-                {customerData.rewards.length === 0 ? (
+                {customerData.rules.length === 0 ? (
                   <p className="text-xs italic text-muted-foreground">{t('kasir.noActiveReward')}</p>
                 ) : (
                   <div className="flex flex-col gap-2">
-                    {customerData.rewards.map((reward) => (
-                      <div
-                        key={reward.id}
-                        className="flex items-center justify-between gap-3 rounded-xl border border-accent/40 bg-accent/5 p-3"
-                      >
-                        <div className="flex items-center gap-3">
-                          <Gift className="h-5 w-5 shrink-0 text-accent" />
-                          <div className="min-w-0">
-                            <p className="truncate text-xs font-bold text-foreground">
-                              {reward.reward_rules?.name}
-                            </p>
-                            <p className="truncate text-[10px] text-muted-foreground">
-                              {t('kasir.target', { count: reward.reward_rules?.target_stamps ?? 0 })}
-                            </p>
-                          </div>
-                        </div>
-                        <Button
-                          size="sm"
-                          disabled={isPending}
-                          onClick={() => handleRedeemReward(reward.id)}
-                          className="h-8 shrink-0 bg-accent py-1 text-xs font-semibold text-accent-foreground hover:bg-accent/90"
+                    {customerData.rules.map((rule) => {
+                      const affordable = customerData.currentStamps >= rule.target_stamps
+                      const missing = rule.target_stamps - customerData.currentStamps
+                      return (
+                        <div
+                          key={rule.id}
+                          className={cn(
+                            'flex items-center justify-between gap-3 rounded-xl border p-3',
+                            affordable ? 'border-accent/40 bg-accent/5' : 'border-border bg-muted/40'
+                          )}
                         >
-                          {t('kasir.redeemReward')}
-                        </Button>
-                      </div>
-                    ))}
+                          <div className="flex items-center gap-3">
+                            <Gift
+                              className={cn(
+                                'h-5 w-5 shrink-0',
+                                affordable ? 'text-accent' : 'text-muted-foreground'
+                              )}
+                            />
+                            <div className="min-w-0">
+                              <p className="truncate text-xs font-bold text-foreground">{rule.name}</p>
+                              <p className="truncate text-[10px] text-muted-foreground">
+                                {affordable
+                                  ? t('kasir.target', { count: rule.target_stamps })
+                                  : t('kasir.needMoreStamps', { count: missing })}
+                              </p>
+                            </div>
+                          </div>
+                          <Button
+                            size="sm"
+                            disabled={isPending || !affordable}
+                            onClick={() => requestRedeem(rule)}
+                            className="h-8 shrink-0 bg-accent py-1 text-xs font-semibold text-accent-foreground hover:bg-accent/90"
+                          >
+                            {t('kasir.redeemReward')}
+                          </Button>
+                        </div>
+                      )
+                    })}
                   </div>
                 )}
               </div>
@@ -359,6 +409,63 @@ export default function ScanClient() {
           </Card>
         </div>
       )}
+
+      {/* Success screen: tells the cashier exactly what to hand over */}
+      {redeemedReward && (
+        <div className="flex animate-in flex-col gap-6 duration-300 fade-in slide-in-from-bottom-4">
+          <Card className="border-accent/40 shadow-md">
+            <CardContent className="flex flex-col items-center gap-4 p-8 text-center">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-success/15 text-success">
+                <CheckCircle2 className="h-9 w-9" />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                  {t('kasir.giveProduct')}
+                </p>
+                <h2 className="mt-1 text-2xl font-extrabold text-foreground">{redeemedReward.name}</h2>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {t('kasir.remainingStamps', { count: redeemedReward.newStamps })}
+              </p>
+              <Button
+                onClick={() => {
+                  setRedeemedReward(null)
+                  resetToScanner()
+                }}
+                className="mt-2 w-full text-sm font-semibold"
+              >
+                {t('kasir.done')}
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Confirm redemption (spending stamps is hard to undo) */}
+      <Dialog open={!!confirmRule} onOpenChange={(open) => !open && setConfirmRule(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('kasir.confirmRedeemTitle')}</DialogTitle>
+            <DialogDescription>
+              {confirmRule && customerData
+                ? t('kasir.confirmRedeemDesc', {
+                    name: confirmRule.name,
+                    cost: confirmRule.target_stamps,
+                    remaining: customerData.currentStamps - confirmRule.target_stamps,
+                  })
+                : ''}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmRule(null)} disabled={isPending}>
+              {t('common.cancel')}
+            </Button>
+            <Button onClick={confirmRedeem} disabled={isPending}>
+              {isPending ? t('kasir.processing') : t('kasir.confirmRedeemButton')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

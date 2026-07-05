@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
 import { toast } from 'sonner'
-import { createCashierAction, toggleCashierStatusAction, updateCashierNameAction } from '@/lib/supabase/actions'
+import { createCashierAction, toggleCashierStatusAction, updateCashierNameAction, deleteCashierAction } from '@/lib/supabase/actions'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
-import { Plus, Edit, UserPlus } from 'lucide-react'
+import { Plus, Edit, UserPlus, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface CashierProfile {
@@ -38,6 +38,7 @@ export default function KasirManagementClient({ cashiers }: KasirManagementClien
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [editingCashier, setEditingCashier] = useState<CashierProfile | null>(null)
   const [editName, setEditName] = useState('')
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
 
   const intlLocale = locale === 'id' ? 'id-ID' : 'en-US'
 
@@ -81,6 +82,24 @@ export default function KasirManagementClient({ cashiers }: KasirManagementClien
         return
       }
       toast.success(t('owner.kasirNameUpdated'))
+      setIsEditOpen(false)
+      setEditingCashier(null)
+      router.refresh()
+    })
+  }
+
+  // Delete now lives inside the edit dialog and is guarded by a confirmation
+  // dialog (no more native confirm()).
+  const handleDeleteCashier = () => {
+    if (!editingCashier) return
+    startTransition(async () => {
+      const result = await deleteCashierAction(editingCashier.id)
+      if (!result.success) {
+        toast.error(result.error || t('common.error'))
+        return
+      }
+      toast.success(t('owner.kasirDeleted'))
+      setConfirmDeleteOpen(false)
       setIsEditOpen(false)
       setEditingCashier(null)
       router.refresh()
@@ -186,7 +205,7 @@ export default function KasirManagementClient({ cashiers }: KasirManagementClien
                       })}
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-3">
+                      <div className="flex items-center justify-end gap-2">
                         <Switch
                           checked={c.is_active}
                           onCheckedChange={() => handleToggleStatus(c.id, c.is_active)}
@@ -243,6 +262,19 @@ export default function KasirManagementClient({ cashiers }: KasirManagementClien
             <DialogFooter>
               <Button
                 type="button"
+                variant="ghost"
+                onClick={() => {
+                  setIsEditOpen(false)
+                  setConfirmDeleteOpen(true)
+                }}
+                disabled={isPending}
+                className="gap-1.5 text-destructive hover:bg-destructive/10 hover:text-destructive sm:mr-auto"
+              >
+                <Trash2 className="h-4 w-4" />
+                {t('owner.deleteKasir')}
+              </Button>
+              <Button
+                type="button"
                 variant="outline"
                 onClick={() => {
                   setIsEditOpen(false)
@@ -256,6 +288,41 @@ export default function KasirManagementClient({ cashiers }: KasirManagementClien
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete confirmation (opened from the edit dialog) */}
+      <Dialog open={confirmDeleteOpen} onOpenChange={(open) => !open && setConfirmDeleteOpen(false)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="h-5 w-5" />
+              {t('common.confirmDeleteTitle')}
+            </DialogTitle>
+            <DialogDescription>{t('common.confirmDelete')}</DialogDescription>
+          </DialogHeader>
+          <div className="rounded-lg border border-border bg-secondary/40 p-3 text-sm">
+            <p className="font-semibold text-foreground">{editingCashier?.full_name}</p>
+            <p className="text-xs text-muted-foreground">{editingCashier?.email}</p>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setConfirmDeleteOpen(false)}
+              disabled={isPending}
+            >
+              {t('common.cancel')}
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={handleDeleteCashier}
+              disabled={isPending}
+            >
+              {isPending ? t('common.loading') : t('common.delete')}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

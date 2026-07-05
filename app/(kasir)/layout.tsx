@@ -3,7 +3,7 @@ import { getTranslations } from 'next-intl/server'
 import { getMyProfile } from '@/lib/supabase/auth'
 import { Button } from '@/components/ui/button'
 import { signOut } from '@/lib/supabase/actions'
-import { Coffee, LogOut } from 'lucide-react'
+import { LogOut } from 'lucide-react'
 
 export default async function KasirLayout({
   children,
@@ -23,13 +23,12 @@ export default async function KasirLayout({
         {/* Header Bar */}
         <header className="sticky top-0 z-50 flex h-16 items-center justify-between border-b border-border bg-background/90 px-5 backdrop-blur-md">
           <div className="flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <Coffee className="h-4 w-4" />
-            </span>
             <div className="flex items-center gap-2">
-              <span className="text-lg tracking-tight text-foreground [font-family:var(--font-heading)]">
-                {t('app.name')}
-              </span>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <div className="h-9 w-20 overflow-hidden rounded-lg">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/logoApps.png" alt={t('app.name')} className="h-full w-full object-cover object-center" />
+              </div>
               <span className="rounded bg-accent/15 px-1.5 py-0.5 text-[9px] font-bold uppercase text-accent">
                 {profile.role}
               </span>
@@ -37,6 +36,9 @@ export default async function KasirLayout({
           </div>
 
           <div className="flex items-center gap-3">
+            {/* Partner logo (top-right) */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-bca.png" alt="bakti BCA" className="h-6 w-auto object-contain" />
             <span className="max-w-[100px] truncate text-xs font-semibold text-muted-foreground">
               {profile.full_name}
             </span>

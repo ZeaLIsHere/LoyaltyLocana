@@ -8,12 +8,13 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Globe, LogOut, Mail, Check, Pencil, X } from 'lucide-react'
-import { updateProfileName } from '@/lib/supabase/actions'
+import { Globe, LogOut, Mail, Check, Pencil, X, Calendar } from 'lucide-react'
+import { updateProfileNameAndBirth } from '@/lib/supabase/actions'
 
 interface SettingsClientProps {
   fullName: string
   email: string
+  birthDate: string | null
   initialLocale: string
   signOutAction: () => Promise<void>
 }
@@ -21,14 +22,17 @@ interface SettingsClientProps {
 export default function SettingsClient({
   fullName,
   email,
+  birthDate,
   initialLocale,
   signOutAction,
 }: SettingsClientProps) {
   const t = useTranslations()
   const [currentLocale, setCurrentLocale] = useState(initialLocale)
   const [name, setName] = useState(fullName)
+  const [birth, setBirth] = useState<string>(birthDate || '')
   const [editing, setEditing] = useState(false)
   const [draftName, setDraftName] = useState(fullName)
+  const [draftBirth, setDraftBirth] = useState<string>(birthDate || '')
   const [isPending, startTransition] = useTransition()
 
   const handleLanguageChange = (checked: boolean) => {
@@ -38,21 +42,22 @@ export default function SettingsClient({
     window.location.reload()
   }
 
-  const handleSaveName = () => {
+  const handleSaveProfile = () => {
     const trimmed = draftName.trim()
     if (!trimmed) {
       toast.error(t('customer.nameEmpty'))
       return
     }
     startTransition(async () => {
-      const result = await updateProfileName(trimmed)
+      const result = await updateProfileNameAndBirth(trimmed, draftBirth || null)
       if (!result.success) {
         toast.error(result.error || t('common.error'))
         return
       }
       setName(trimmed)
+      setBirth(draftBirth)
       setEditing(false)
-      toast.success(t('customer.nameUpdated'))
+      toast.success(t('customer.nameUpdated') || 'Profil berhasil diperbarui')
     })
   }
 
@@ -100,36 +105,62 @@ export default function SettingsClient({
           </Avatar>
           <div className="min-w-0 flex-1 space-y-2">
             {editing ? (
-              <div className="flex items-center gap-2">
-                <Input
-                  value={draftName}
-                  onChange={(e) => setDraftName(e.target.value)}
-                  className="h-9"
-                  autoFocus
-                  disabled={isPending}
-                />
-                <Button
-                  size="icon"
-                  className="h-9 w-9 shrink-0"
-                  onClick={handleSaveName}
-                  disabled={isPending}
-                  aria-label={t('common.save')}
-                >
-                  <Check className="h-4 w-4" />
-                </Button>
-                <Button
-                  size="icon"
-                  variant="outline"
-                  className="h-9 w-9 shrink-0"
-                  onClick={() => setEditing(false)}
-                  disabled={isPending}
-                  aria-label={t('common.cancel')}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={draftName}
+                    onChange={(e) => setDraftName(e.target.value)}
+                    className="h-9"
+                    autoFocus
+                    disabled={isPending}
+                  />
+                  <Button
+                    size="icon"
+                    className="h-9 w-9 shrink-0"
+                    onClick={handleSaveProfile}
+                    disabled={isPending}
+                    aria-label={t('common.save')}
+                  >
+                    <Check className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    className="h-9 w-9 shrink-0"
+                    onClick={() => setEditing(false)}
+                    disabled={isPending}
+                    aria-label={t('common.cancel')}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="flex flex-col gap-1">
+                  <span className="text-[10px] text-muted-foreground">{t('auth.birthDate') || 'Tanggal Lahir'}</span>
+                  <Input
+                    type="date"
+                    value={draftBirth}
+                    onChange={(e) => setDraftBirth(e.target.value)}
+                    className="h-9"
+                    disabled={isPending}
+                  />
+                </div>
               </div>
             ) : (
-              <span className="block truncate text-sm font-bold text-foreground">{name}</span>
+              <div className="space-y-1">
+                <span className="block truncate text-sm font-bold text-foreground">{name}</span>
+                {birth && (
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <Calendar className="h-3.5 w-3.5" />
+                    <span>
+                      {new Date(birth).toLocaleDateString(currentLocale === 'id' ? 'id-ID' : 'en-US', {
+                        day: 'numeric',
+                        month: 'short',
+                        year: 'numeric',
+                      })}
+                    </span>
+                  </div>
+                )}
+              </div>
             )}
             <div className="flex items-center gap-1.5">
               <Mail className="h-3.5 w-3.5 text-muted-foreground" />

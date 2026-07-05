@@ -11,6 +11,7 @@
     "email": "Email",
     "password": "Kata Sandi",
     "fullName": "Nama Lengkap",
+    "birthDate": "Tanggal Lahir",
     "loginTitle": "Masuk ke Locana",
     "loginSubtitle": "Selamat datang kembali, silakan masuk ke akunmu",
     "registerTitle": "Buat Akun Baru",
@@ -24,7 +25,9 @@
     "fullNamePlaceholder": "Masukkan nama lengkap",
     "loginError": "Email atau kata sandi salah",
     "registerError": "Gagal membuat akun",
-    "registerSuccess": "Akun berhasil dibuat"
+    "registerSuccess": "Akun berhasil dibuat",
+    "showPassword": "Tampilkan sandi",
+    "hidePassword": "Sembunyikan sandi"
   },
   "customer": {
     "home": "Beranda",
@@ -95,7 +98,15 @@
     "scanOther": "Scan Customer Lain",
     "rewardEarnedNamed": "Selamat! Reward baru didapatkan: {name}",
     "uploadQr": "Unggah Foto QR",
-    "qrNotDetected": "QR tidak terbaca dari gambar. Coba foto yang lebih jelas."
+    "qrNotDetected": "QR tidak terbaca dari gambar. Coba foto yang lebih jelas.",
+    "needMoreStamps": "Kurang {count} stempel",
+    "cardFull": "Kartu stempel penuh. Tukar reward dulu.",
+    "confirmRedeemTitle": "Konfirmasi Penukaran",
+    "confirmRedeemDesc": "Apakah Anda yakin ingin menukarkan {name} dengan {cost} stempel? Sisa stempel customer akan menjadi {remaining} stempel.",
+    "confirmRedeemButton": "Konfirmasi Penukaran",
+    "giveProduct": "Berikan Produk Kepada Customer",
+    "remainingStamps": "Sisa stempel: {count} stempel",
+    "done": "Selesai"
   },
   "owner": {
     "dashboard": "Dashboard",
@@ -187,12 +198,29 @@
     "detail": "Detail",
     "allActions": "Semua Aksi",
     "reset": "Reset",
-    "noLogsMatch": "Tidak ditemukan log aktivitas yang sesuai"
+    "noLogsMatch": "Tidak ditemukan log aktivitas yang sesuai",
+    "customersListDesc": "Lihat daftar customer terdaftar beserta detail stempel dan tanggal lahir",
+    "customerDetail": "Detail Customer",
+    "ageYears": "{count} tahun",
+    "currentStampsLabel": "Stempel saat ini",
+    "lifetimeStamps": "Total stempel diterima",
+    "rewardsRedeemedLabel": "Reward ditukar",
+    "joinedOn": "Bergabung",
+    "notFilled": "Belum diisi",
+    "ruleDeleted": "Aturan reward berhasil dihapus",
+    "kasirDeleted": "Akun kasir berhasil dihapus secara permanen",
+    "deleteKasir": "Hapus Kasir",
+    "deleteRule": "Hapus Aturan",
+    "deleteCustomer": "Hapus Customer",
+    "customerUpdated": "Data customer berhasil diperbarui",
+    "customerDeleted": "Customer berhasil dihapus"
   },
   "common": {
     "save": "Simpan",
     "cancel": "Batal",
     "delete": "Hapus",
+    "confirmDelete": "Apakah Anda yakin ingin menghapus data ini secara permanen?",
+    "confirmDeleteTitle": "Konfirmasi Hapus",
     "edit": "Edit",
     "add": "Tambah",
     "search": "Cari",

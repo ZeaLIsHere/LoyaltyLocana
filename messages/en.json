@@ -11,6 +11,7 @@
     "email": "Email",
     "password": "Password",
     "fullName": "Full Name",
+    "birthDate": "Birth Date",
     "loginTitle": "Sign in to Locana",
     "loginSubtitle": "Welcome back, please sign in to your account",
     "registerTitle": "Create New Account",
@@ -24,7 +25,9 @@
     "fullNamePlaceholder": "Enter your full name",
     "loginError": "Invalid email or password",
     "registerError": "Failed to create account",
-    "registerSuccess": "Account created successfully"
+    "registerSuccess": "Account created successfully",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password"
   },
   "customer": {
     "home": "Home",
@@ -95,7 +98,15 @@
     "scanOther": "Scan Another Customer",
     "rewardEarnedNamed": "Congrats! New reward earned: {name}",
     "uploadQr": "Upload QR Photo",
-    "qrNotDetected": "Couldn't read the QR from the image. Try a clearer photo."
+    "qrNotDetected": "Couldn't read the QR from the image. Try a clearer photo.",
+    "needMoreStamps": "{count} more stamps",
+    "cardFull": "Stamp card is full. Redeem a reward first.",
+    "confirmRedeemTitle": "Confirm Redemption",
+    "confirmRedeemDesc": "Are you sure you want to redeem {name} for {cost} stamps? The customer's remaining stamps will be {remaining}.",
+    "confirmRedeemButton": "Confirm Redemption",
+    "giveProduct": "Hand Over Product to Customer",
+    "remainingStamps": "Remaining stamps: {count}",
+    "done": "Done"
   },
   "owner": {
     "dashboard": "Dashboard",
@@ -187,12 +198,29 @@
     "detail": "Detail",
     "allActions": "All Actions",
     "reset": "Reset",
-    "noLogsMatch": "No matching activity logs found"
+    "noLogsMatch": "No matching activity logs found",
+    "customersListDesc": "View the list of registered customers with stamp balance and birth date details",
+    "customerDetail": "Customer Detail",
+    "ageYears": "{count} years",
+    "currentStampsLabel": "Current stamps",
+    "lifetimeStamps": "Total stamps earned",
+    "rewardsRedeemedLabel": "Rewards redeemed",
+    "joinedOn": "Joined",
+    "notFilled": "Not provided",
+    "ruleDeleted": "Reward rule deleted successfully",
+    "kasirDeleted": "Cashier account deleted successfully",
+    "deleteKasir": "Delete Cashier",
+    "deleteRule": "Delete Rule",
+    "deleteCustomer": "Delete Customer",
+    "customerUpdated": "Customer updated successfully",
+    "customerDeleted": "Customer deleted successfully"
   },
   "common": {
     "save": "Save",
     "cancel": "Cancel",
     "delete": "Delete",
+    "confirmDelete": "Are you sure you want to delete this permanently?",
+    "confirmDeleteTitle": "Confirm Deletion",
     "edit": "Edit",
     "add": "Add",
     "search": "Search",

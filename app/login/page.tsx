@@ -9,13 +9,14 @@ import { signIn } from '@/lib/supabase/actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Coffee, Globe, KeyRound, Mail } from 'lucide-react'
+import { Eye, EyeOff, Globe, KeyRound, Mail } from 'lucide-react'
 
 export default function LoginPage() {
   const t = useTranslations()
   const router = useRouter()
   const searchParams = useSearchParams()
   const [isPending, startTransition] = useTransition()
+  const [showPassword, setShowPassword] = useState(false)
   const [currentLocale, setCurrentLocale] = useState(() => {
     if (typeof window !== 'undefined') {
       const match = document.cookie.match(/(?:^|; )locale=([^;]*)/)
@@ -57,8 +58,10 @@ export default function LoginPage() {
       <div className="pointer-events-none absolute -top-32 -left-24 h-72 w-72 rounded-full bg-accent/20 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-32 -right-24 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
 
-      {/* Language Toggle */}
-      <div className="absolute top-4 right-4 z-10">
+      {/* Partner logo + Language Toggle (top-right) */}
+      <div className="absolute top-4 right-4 z-10 flex items-center gap-3">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logo-bca.png" alt="bakti BCA" className="h-7 w-auto object-contain" />
         <Button
           variant="ghost"
           size="sm"
@@ -73,25 +76,12 @@ export default function LoginPage() {
       <div className="relative w-full max-w-md">
         {/* Brand */}
         <div className="mb-8 flex flex-col items-center gap-4 text-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20">
-            <Coffee className="h-7 w-7" />
-          </div>
           <div className="space-y-1">
-            <h1 className="text-4xl tracking-tight text-foreground">{t('app.name')}</h1>
+            <div className="mx-auto h-48 w-48 overflow-hidden rounded-2xl">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logoApps.png" alt={t('app.name')} className="h-full w-full object-cover object-center" />
+            </div>
             <p className="text-sm text-muted-foreground">{t('app.tagline')}</p>
-          </div>
-          {/* Signature: loyalty stamp-dot row */}
-          <div className="flex items-center gap-1.5" aria-hidden>
-            {[0, 1, 2, 3, 4].map((i) => (
-              <span
-                key={i}
-                className={
-                  i < 3
-                    ? 'h-2 w-2 rounded-full bg-accent'
-                    : 'h-2 w-2 rounded-full border border-border bg-transparent'
-                }
-              />
-            ))}
           </div>
         </div>
 
@@ -124,11 +114,19 @@ export default function LoginPage() {
                 <Input
                   id="password"
                   name="password"
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   placeholder={t('auth.passwordPlaceholder')}
                   required
-                  className="pl-10"
+                  className="pl-10 pr-10"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
+                  className="absolute top-3 right-3 text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
               </div>
             </div>
 

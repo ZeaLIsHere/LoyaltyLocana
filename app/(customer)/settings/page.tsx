@@ -19,6 +19,7 @@ export default async function SettingsPage() {
     <SettingsClient
       fullName={profile?.full_name || 'Customer'}
       email={profile?.email || user.email || ''}
+      birthDate={profile?.birth_date || null}
       initialLocale={currentLocale}
       signOutAction={signOut}
     />
