@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient, createServiceClient } from './server'
+import { signQrToken, verifyQrToken } from '@/lib/qr-token'
 import { redirect } from 'next/navigation'
 
 export async function signIn(formData: FormData) {
@@ -134,7 +135,29 @@ export async function updateProfileNameAndBirth(fullName: string, birthDate: str
   }
 }
 
-export async function fetchCustomerScanData(customerId: string) {
+// Called from the authenticated customer's own home page. Mints a short-lived,
+// signed QR token for THEIR id (a customer can only mint their own). The client
+// re-calls this to rotate the QR when it expires.
+export async function mintQrToken() {
+  try {
+    const supabase = await createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    if (!user) {
+      return { success: false, error: 'Sesi berakhir, silakan login kembali' }
+    }
+    const { token, expiresAt } = signQrToken(user.id)
+    return { success: true, token, expiresAt }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Gagal membuat QR'
+    return { success: false, error: message }
+  }
+}
+
+// Accepts the scanned QR *token* (not a raw customer id). Verifies the signature
+// and expiry first, then resolves the customer it points to.
+export async function fetchCustomerScanData(token: string) {
   try {
     const supabase = await createClient()
 
@@ -153,6 +176,15 @@ export async function fetchCustomerScanData(customerId: string) {
     if (!caller || (caller.role !== 'kasir' && caller.role !== 'owner')) {
       return { success: false, error: 'Akses ditolak' }
     }
+
+    // Verify the QR token: reject expired (screenshot of an old QR) or invalid
+    // (tampered / legacy raw-uuid QR) codes with a specific reason the UI maps
+    // to a translated message.
+    const verified = verifyQrToken(token)
+    if (!verified.valid) {
+      return { success: false, reason: verified.reason, error: verified.reason }
+    }
+    const customerId = verified.customerId
 
     // Customer profiles aren't readable by a kasir under RLS (own-or-owner
     // only), so read customer data with the service client. Safe here because

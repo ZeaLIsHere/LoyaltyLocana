@@ -40,8 +40,11 @@ Lengkapi nilai kunci dari dasbor proyek Supabase Anda:
 NEXT_PUBLIC_SUPABASE_URL=https://<your-project-id>.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<your-anon-key>
 SUPABASE_SERVICE_ROLE_KEY=<your-service-role-key>
+QR_SIGNING_SECRET=<random-32-byte-hex>
 ```
 *Penting: `SUPABASE_SERVICE_ROLE_KEY` sangat rahasia dan hanya digunakan di server actions untuk mendaftarkan akun kasir (Supabase Admin Auth API).*
+
+*`QR_SIGNING_SECRET` dipakai server untuk menandatangani QR pelanggan yang berumur pendek (berganti tiap 60 detik) sehingga screenshot QR lama ditolak kasir. Hanya dipakai di sisi server (jangan beri prefix `NEXT_PUBLIC_`). Buat nilainya dengan `openssl rand -hex 32`, dan set juga di environment variables Vercel saat deploy.*
 
 ### 3. Setup Database Supabase (Migration)
 Salin isi berkas migrasi SQL berikut:

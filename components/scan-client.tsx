@@ -66,22 +66,45 @@ export default function ScanClient() {
   const lastScannedRef = useRef<string | null>(null)
   const rescanGuardUntilRef = useRef<number>(0)
   const submittingRef = useRef(false)
+  const loadingRef = useRef(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const scannerId = 'qr-reader'
 
-  const loadCustomerData = useCallback(async (customerId: string) => {
+  const loadCustomerData = useCallback(async (token: string) => {
+    // Re-entrancy guard: the re-activated scanner can fire the same decode again
+    // before the previous request settles. Ignore overlapping loads so a failed
+    // scan can't spin up a burst of concurrent server actions.
+    if (loadingRef.current) return
+    loadingRef.current = true
     setLoadingCustomer(true)
-    const result = await fetchCustomerScanData(customerId)
-    setLoadingCustomer(false)
+    try {
+      const result = await fetchCustomerScanData(token)
 
-    if (!result.success || !result.customer) {
-      toast.error(result.error || t('kasir.customerNotFound'))
-      setScannerActive(true)
-      return
+      if (!result.success || !result.customer) {
+        // Map the token-verification reason to a clear cashier-facing message.
+        const reason = (result as { reason?: 'expired' | 'invalid' }).reason
+        const msg =
+          reason === 'expired'
+            ? t('kasir.qrExpired')
+            : reason === 'invalid'
+              ? t('kasir.invalidQr')
+              : result.error || t('kasir.customerNotFound')
+        toast.error(msg)
+        // Ignore this SAME (bad) code for a short window so a screenshot still
+        // sitting in the camera frame doesn't retrigger an instant retry loop.
+        // A different code (e.g. the customer's refreshed QR) is never guarded.
+        lastScannedRef.current = token
+        rescanGuardUntilRef.current = Date.now() + RESCAN_GUARD_MS
+        setScannerActive(true)
+        return
+      }
+
+      setCustomerData(result.customer as CustomerData)
+      toast.success(t('kasir.scanSuccess'))
+    } finally {
+      loadingRef.current = false
+      setLoadingCustomer(false)
     }
-
-    setCustomerData(result.customer as CustomerData)
-    toast.success(t('kasir.scanSuccess'))
   }, [t])
 
   // Return to the scanner for the next customer (one action per scan).

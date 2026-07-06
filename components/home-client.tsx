@@ -1,10 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import QRCode from 'qrcode'
+import { mintQrToken } from '@/lib/supabase/actions'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Coffee, Gift, QrCode } from 'lucide-react'
+import { Clock, Coffee, Gift, QrCode, RefreshCw } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface HomeClientProps {
@@ -20,26 +22,72 @@ interface HomeClientProps {
 }
 
 export default function HomeClient({
-  customerId,
   fullName,
   currentStamps,
   rules,
 }: HomeClientProps) {
   const t = useTranslations()
   const [qrUrl, setQrUrl] = useState<string>('')
+  const [qrError, setQrError] = useState(false)
+  const [remainingMs, setRemainingMs] = useState(0)
+  const expiresAtRef = useRef(0)
+  const mintingRef = useRef(false)
 
-  useEffect(() => {
-    if (customerId) {
-      QRCode.toDataURL(customerId, {
+  // Mint a fresh signed QR token from the server and render it. The token is
+  // short-lived; the client rotates it on expiry so a screenshot goes stale.
+  const refreshQr = useCallback(async () => {
+    if (mintingRef.current) return
+    mintingRef.current = true
+    setQrError(false)
+    try {
+      const res = await mintQrToken()
+      if (!res.success || !res.token || !res.expiresAt) {
+        setQrError(true)
+        return
+      }
+      const url = await QRCode.toDataURL(res.token, {
         width: 250,
         margin: 2,
         // Neutral black/white is required for QR scan contrast — not a theme color.
         color: { dark: '#000000', light: '#ffffff' },
       })
-        .then((url) => setQrUrl(url))
-        .catch((err) => console.error('Error generating QR Code', err))
+      setQrUrl(url)
+      expiresAtRef.current = res.expiresAt
+      setRemainingMs(res.expiresAt - Date.now())
+    } catch (err) {
+      console.error('Error generating QR Code', err)
+      setQrError(true)
+    } finally {
+      mintingRef.current = false
     }
-  }, [customerId])
+  }, [])
+
+  // Initial mint.
+  useEffect(() => {
+    refreshQr()
+  }, [refreshQr])
+
+  // Tick the countdown every second; auto-rotate the QR the moment it expires.
+  // Skip while a mint is in flight or the last mint failed (expiresAt still 0):
+  // otherwise a failed mint would re-fire every second and spam the server
+  // action. Recovery from an error goes through the retry button instead.
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (mintingRef.current) return
+      const exp = expiresAtRef.current
+      if (exp <= 0) return
+      const rem = exp - Date.now()
+      if (rem <= 0) {
+        refreshQr()
+      } else {
+        setRemainingMs(rem)
+      }
+    }, 1000)
+    return () => clearInterval(id)
+  }, [refreshQr])
+
+  const totalSecs = Math.max(0, Math.ceil(remainingMs / 1000))
+  const countdown = `${Math.floor(totalSecs / 60)}:${(totalSecs % 60).toString().padStart(2, '0')}`
 
   // Spend model: the stamp balance fills up to the highest reward target (the
   // balance cap), so the main card shows progress toward that top reward.
@@ -64,7 +112,15 @@ export default function HomeClient({
             <span>{t('customer.myQr')}</span>
           </div>
           <div className="relative flex h-52 w-52 items-center justify-center overflow-hidden rounded-2xl border border-border bg-white p-3 shadow-inner">
-            {qrUrl ? (
+            {qrError ? (
+              <div className="flex flex-col items-center gap-3 px-4 text-center">
+                <span className="text-xs text-muted-foreground">{t('customer.qrError')}</span>
+                <Button size="sm" variant="outline" onClick={refreshQr} className="h-8 gap-1.5 text-xs">
+                  <RefreshCw className="h-3.5 w-3.5" />
+                  {t('common.retry')}
+                </Button>
+              </div>
+            ) : qrUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={qrUrl} alt={t('customer.myQr')} className="h-full w-full object-contain" />
             ) : (
@@ -73,9 +129,14 @@ export default function HomeClient({
               </div>
             )}
           </div>
-          <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
-            {customerId}
-          </p>
+
+          {/* Countdown to the next automatic QR rotation. */}
+          {!qrError && (
+            <div className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
+              <Clock className="h-3.5 w-3.5 text-accent" />
+              <span>{t('customer.qrRefreshIn', { time: countdown })}</span>
+            </div>
+          )}
         </CardContent>
       </Card>
 
