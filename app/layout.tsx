@@ -1,22 +1,18 @@
 import type { Metadata } from "next";
-import { Poppins, Roboto, Geist_Mono } from "next/font/google";
+import { Inter, Geist_Mono } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
-// Headings / brand — geometric, friendly, distinctive at large sizes.
-const poppins = Poppins({
-  variable: "--font-poppins",
+// Body & headings fallback. On Apple devices the system stack renders SF Pro
+// (see globals.css --font-sans / --font-heading); Inter is the bundled,
+// cross-platform fallback for everyone else. SF Pro itself can't be bundled
+// (Apple licensing), so it's referenced via -apple-system only.
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
-
-// Body / UI — tuned for legibility at small sizes (labels, tables, buttons).
-const roboto = Roboto({
-  variable: "--font-roboto",
-  subsets: ["latin"],
-  weight: ["400", "500", "700"],
+  display: "swap",
 });
 
 // Mono — for QR ids and other monospaced snippets.
@@ -50,7 +46,7 @@ export default async function RootLayout({
   return (
     <html
       lang={locale}
-      className={`${poppins.variable} ${roboto.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${inter.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <NextIntlClientProvider messages={messages}>

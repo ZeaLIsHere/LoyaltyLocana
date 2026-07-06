@@ -7,9 +7,10 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-roboto);
+  /* SF Pro on Apple devices (via -apple-system), Inter bundled fallback elsewhere. */
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", var(--font-inter), "Segoe UI", system-ui, sans-serif;
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-poppins);
+  --font-heading: -apple-system, BlinkMacSystemFont, "SF Pro Display", var(--font-inter), system-ui, sans-serif;
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
   --color-sidebar-ring: var(--sidebar-ring);
