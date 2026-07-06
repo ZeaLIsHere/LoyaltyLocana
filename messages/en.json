@@ -1,7 +1,7 @@
 {
   "app": {
     "name": "Locana",
-    "tagline": "Digital Loyalty App for Cafes",
+    "tagline": "Locana Digital Loyalty App",
     "greeting": "Hi, {name}!"
   },
   "auth": {

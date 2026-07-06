@@ -95,7 +95,7 @@ export default function LoginPage() {
             <div className="space-y-2">
               <Label htmlFor="email">{t('auth.email')}</Label>
               <div className="relative">
-                <Mail className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
+                <Mail className="absolute top-1/2 left-3 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="email"
                   name="email"
@@ -110,7 +110,7 @@ export default function LoginPage() {
             <div className="space-y-2">
               <Label htmlFor="password">{t('auth.password')}</Label>
               <div className="relative">
-                <KeyRound className="absolute top-3 left-3 h-4 w-4 text-muted-foreground" />
+                <KeyRound className="absolute top-1/2 left-3 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="password"
                   name="password"
@@ -123,7 +123,7 @@ export default function LoginPage() {
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
                   aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
-                  className="absolute top-3 right-3 text-muted-foreground transition-colors hover:text-foreground"
+                  className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
