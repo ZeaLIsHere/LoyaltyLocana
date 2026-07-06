@@ -91,16 +91,16 @@ export default async function CustomerRewardsPage() {
       </div>
 
       <Tabs defaultValue="available" className="w-full">
-        <TabsList className="grid h-auto w-full grid-cols-2 rounded-xl bg-muted p-1.5">
+        <TabsList className="grid w-full grid-cols-2 rounded-xl bg-muted p-1.5 group-data-horizontal/tabs:h-12">
           <TabsTrigger
             value="available"
-            className="rounded-lg py-2.5 text-sm font-semibold data-[state=active]:bg-card data-[state=active]:text-accent data-[state=active]:shadow-sm"
+            className="rounded-lg text-sm font-semibold data-active:bg-card data-active:text-accent data-active:shadow-sm"
           >
             {t('customer.rewardAvailable')} ({redeemableRules.length})
           </TabsTrigger>
           <TabsTrigger
             value="used"
-            className="rounded-lg py-2.5 text-sm font-semibold data-[state=active]:bg-card data-[state=active]:text-accent data-[state=active]:shadow-sm"
+            className="rounded-lg text-sm font-semibold data-active:bg-card data-active:text-accent data-active:shadow-sm"
           >
             {t('customer.rewardUsed')} ({usedRewards.length})
           </TabsTrigger>
