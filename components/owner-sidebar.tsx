@@ -61,7 +61,7 @@ export default function OwnerSidebar({ ownerName, signOutAction }: OwnerSidebarP
             <span className="text-sm tracking-tight text-sidebar-foreground [font-family:var(--font-heading)]">
               {t('owner.panelTitle')}
             </span>
-            <span className="font-mono text-[9px] text-muted-foreground">
+            <span className="text-[9px] text-muted-foreground">
               {t('owner.loyaltySystem')}
             </span>
           </div>

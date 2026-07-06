@@ -177,7 +177,7 @@ export default function RewardRulesClient({ rules }: RewardRulesClientProps) {
                     <TableCell className="max-w-xs truncate text-xs text-muted-foreground">
                       {rule.description || '-'}
                     </TableCell>
-                    <TableCell className="font-mono text-xs font-bold text-foreground">
+                    <TableCell className="text-xs font-bold text-foreground">
                       {rule.target_stamps} {t('owner.stamps')}
                     </TableCell>
                     <TableCell>

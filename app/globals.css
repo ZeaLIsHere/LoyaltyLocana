@@ -9,7 +9,8 @@
   --color-foreground: var(--foreground);
   /* SF Pro on Apple devices (via -apple-system), Inter bundled fallback elsewhere. */
   --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", var(--font-inter), "Segoe UI", system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono);
+  /* No separate mono face — keep everything on the SF Pro / Inter stack. */
+  --font-mono: -apple-system, BlinkMacSystemFont, "SF Pro Text", var(--font-inter), "Segoe UI", system-ui, sans-serif;
   --font-heading: -apple-system, BlinkMacSystemFont, "SF Pro Display", var(--font-inter), system-ui, sans-serif;
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);

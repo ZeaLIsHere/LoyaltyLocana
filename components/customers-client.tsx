@@ -196,7 +196,7 @@ export default function CustomersClient({ customers }: CustomersClientProps) {
                   >
                     <TableCell className="font-semibold text-foreground">{c.full_name}</TableCell>
                     <TableCell className="text-muted-foreground">{c.email}</TableCell>
-                    <TableCell className="font-mono text-xs text-foreground">
+                    <TableCell className="text-xs text-foreground">
                       {c.birth_date ? formatDate(c.birth_date) : '-'}
                     </TableCell>
                     <TableCell>

@@ -172,7 +172,7 @@ export default function ActivityLogsClient({ logs, cashiers }: ActivityLogsClien
 
                   return (
                     <TableRow key={log.id} className="hover:bg-secondary/40">
-                      <TableCell className="font-mono text-xs text-muted-foreground">
+                      <TableCell className="text-xs text-muted-foreground">
                         {new Date(log.created_at).toLocaleString(intlLocale, {
                           day: 'numeric',
                           month: 'short',
