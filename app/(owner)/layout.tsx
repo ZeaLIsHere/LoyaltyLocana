@@ -32,7 +32,7 @@ export default async function OwnerLayout({
         <img
           src="/Logo_Bakti_BCA.png"
           alt="bakti BCA"
-          className="pointer-events-none absolute right-10 top-8 z-20 hidden h-5 w-auto object-contain md:block"
+          className="pointer-events-none absolute right-10 top-8 z-20 hidden h-10 w-auto object-contain md:block"
         />
         <main className="flex-1 p-6 md:p-10">{children}</main>
       </div>

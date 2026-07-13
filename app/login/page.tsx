@@ -61,7 +61,7 @@ export default function LoginPage() {
       {/* Partner logo + Language Toggle (top-right) */}
       <div className="absolute top-4 right-4 z-10 flex items-center gap-3">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/Logo_Bakti_BCA.png" alt="bakti BCA" className="h-7 w-auto object-contain" />
+        <img src="/Logo_Bakti_BCA.png" alt="bakti BCA" className="h-12 w-auto object-contain" />
         <Button
           variant="ghost"
           size="sm"
