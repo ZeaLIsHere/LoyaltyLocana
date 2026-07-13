@@ -58,10 +58,16 @@ export default function RegisterPage() {
       <div className="pointer-events-none absolute -top-32 -left-24 h-72 w-72 rounded-full bg-accent/20 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-32 -right-24 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
 
-      {/* Partner logo + Language Toggle (top-right) */}
+      {/* Partner logo (top-left, its own element so it can be large) */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/Logo_Bakti_BCA.png"
+        alt="bakti BCA"
+        className="pointer-events-none absolute top-4 left-4 z-10 h-24 w-auto object-contain sm:h-28"
+      />
+
+      {/* Language Toggle (top-right) */}
       <div className="absolute top-4 right-4 z-10 flex items-center gap-3">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/Logo_Bakti_BCA.png" alt="bakti BCA" className="h-12 w-auto object-contain" />
         <Button
           variant="ghost"
           size="sm"
