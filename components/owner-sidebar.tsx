@@ -40,7 +40,7 @@ export default function OwnerSidebar({ ownerName, signOutAction }: OwnerSidebarP
         <div className="flex items-center gap-3">
           {/* Partner logo, beside the burger. eslint-disable-next-line @next/next/no-img-element */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-bca.png" alt="bakti BCA" className="h-5 w-auto object-contain" />
+          <img src="/Logo_Bakti_BCA.png" alt="bakti BCA" className="h-5 w-auto object-contain" />
           <Button variant="ghost" size="icon" onClick={toggleSidebar} aria-label="Menu">
             {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </Button>

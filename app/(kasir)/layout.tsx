@@ -38,7 +38,7 @@ export default async function KasirLayout({
           <div className="flex items-center gap-3">
             {/* Partner logo (top-right) */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-bca.png" alt="bakti BCA" className="h-6 w-auto object-contain" />
+            <img src="/Logo_Bakti_BCA.png" alt="bakti BCA" className="h-6 w-auto object-contain" />
             <span className="max-w-[100px] truncate text-xs font-semibold text-muted-foreground">
               {profile.full_name}
             </span>

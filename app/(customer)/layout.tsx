@@ -37,7 +37,7 @@ export default async function CustomerLayout({
           </div>
           {/* Partner logo (top-right) */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-bca.png" alt="bakti BCA" className="ml-auto h-7 w-auto object-contain" />
+          <img src="/Logo_Bakti_BCA.png" alt="bakti BCA" className="ml-auto h-7 w-auto object-contain" />
         </header>
 
         {/* Main Content Area */}

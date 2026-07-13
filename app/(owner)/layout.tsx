@@ -30,7 +30,7 @@ export default async function OwnerLayout({
             controls even if they overlap. */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/logo-bca.png"
+          src="/Logo_Bakti_BCA.png"
           alt="bakti BCA"
           className="pointer-events-none absolute right-10 top-8 z-20 hidden h-5 w-auto object-contain md:block"
         />
