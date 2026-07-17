@@ -58,16 +58,8 @@ export default function LoginPage() {
       <div className="pointer-events-none absolute -top-32 -left-24 h-72 w-72 rounded-full bg-accent/20 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-32 -right-24 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
 
-      {/* Partner logo (top-right, its own element so it can be large & responsive) */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src="/Logo_Bakti_BCA.png"
-        alt="bakti BCA"
-        className="pointer-events-none absolute top-3 right-3 z-10 h-16 w-auto object-contain sm:top-4 sm:right-4 sm:h-24 md:h-28"
-      />
-
-      {/* Language Toggle (top-left) */}
-      <div className="absolute top-4 left-4 z-10 flex items-center gap-3">
+      {/* Top bar: language toggle + partner logo side by side */}
+      <div className="absolute top-4 right-4 z-10 flex items-center gap-3">
         <Button
           variant="ghost"
           size="sm"
@@ -77,6 +69,13 @@ export default function LoginPage() {
           <Globe className="h-4 w-4" />
           <span>{currentLocale === 'id' ? 'ID' : 'EN'}</span>
         </Button>
+        {/* Partner logo, next to the language toggle */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/Logo_Bakti_BCA.png"
+          alt="bakti BCA"
+          className="pointer-events-none h-9 w-auto object-contain sm:h-10"
+        />
       </div>
 
       <div className="relative w-full max-w-md">
