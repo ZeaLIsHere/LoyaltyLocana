@@ -44,6 +44,11 @@ interface DashboardTablesProps {
   frequency: FrequencyRow[]
 }
 
+// Phones get smaller type and tighter cell padding so these tables fit without
+// horizontal scrolling; from `sm` up they relax back to the default sizing.
+const compactTable =
+  'text-xs sm:text-sm [&_td]:px-2 [&_td]:py-2 [&_th]:px-2 sm:[&_td]:px-3 sm:[&_th]:px-3'
+
 export default function DashboardTables({
   dailyActivity,
   metrics,
@@ -89,16 +94,16 @@ export default function DashboardTables({
   return (
     <div className="grid gap-6 lg:grid-cols-3">
       {/* 1. Daily Stamp Activity (14 days) */}
-      <Card className="border-border shadow-sm lg:col-span-2">
+      <Card className="min-w-0 border-border shadow-sm lg:col-span-2">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base font-bold text-card-foreground">
-            <CalendarDays className="h-4 w-4 text-accent" />
+          <CardTitle className="flex items-center gap-2 text-sm font-bold text-card-foreground sm:text-base">
+            <CalendarDays className="h-4 w-4 shrink-0 text-accent" />
             {t('owner.dailyActivityTitle')}
           </CardTitle>
-          <CardDescription>{t('owner.dailyActivityDesc')}</CardDescription>
+          <CardDescription className="text-xs sm:text-sm">{t('owner.dailyActivityDesc')}</CardDescription>
         </CardHeader>
         <CardContent className="p-0">
-          <Table>
+          <Table className={compactTable}>
             <TableHeader className="bg-secondary/40">
               <TableRow>
                 <TableHead className="font-bold text-foreground">{t('owner.colDay')}</TableHead>
@@ -117,7 +122,7 @@ export default function DashboardTables({
                     {row.week === 1 ? t('owner.week1') : t('owner.week2')}
                   </TableCell>
                   <TableCell className="text-center font-bold tabular-nums text-foreground">{row.stamps}</TableCell>
-                  <TableCell className={`text-xs font-medium ${noteClass(row.note)}`}>{noteLabel(row.note)}</TableCell>
+                  <TableCell className={`font-medium ${noteClass(row.note)}`}>{noteLabel(row.note)}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -137,16 +142,16 @@ export default function DashboardTables({
       </Card>
 
       {/* 3. Stamp-count frequency */}
-      <Card className="border-border shadow-sm">
+      <Card className="min-w-0 border-border shadow-sm">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base font-bold text-card-foreground">
-            <BarChart3 className="h-4 w-4 text-accent" />
+          <CardTitle className="flex items-center gap-2 text-sm font-bold text-card-foreground sm:text-base">
+            <BarChart3 className="h-4 w-4 shrink-0 text-accent" />
             {t('owner.frequencyTitle')}
           </CardTitle>
-          <CardDescription>{t('owner.frequencyDesc')}</CardDescription>
+          <CardDescription className="text-xs sm:text-sm">{t('owner.frequencyDesc')}</CardDescription>
         </CardHeader>
         <CardContent className="p-0">
-          <Table>
+          <Table className={compactTable}>
             <TableHeader className="bg-secondary/40">
               <TableRow>
                 <TableHead className="font-bold text-foreground">{t('owner.colStampAmount')}</TableHead>
@@ -168,16 +173,16 @@ export default function DashboardTables({
       </Card>
 
       {/* 2. Dashboard metrics summary */}
-      <Card className="border-border shadow-sm lg:col-span-3">
+      <Card className="min-w-0 border-border shadow-sm lg:col-span-3">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base font-bold text-card-foreground">
-            <ListOrdered className="h-4 w-4 text-accent" />
+          <CardTitle className="flex items-center gap-2 text-sm font-bold text-card-foreground sm:text-base">
+            <ListOrdered className="h-4 w-4 shrink-0 text-accent" />
             {t('owner.metricsSummaryTitle')}
           </CardTitle>
-          <CardDescription>{t('owner.metricsSummaryDesc')}</CardDescription>
+          <CardDescription className="text-xs sm:text-sm">{t('owner.metricsSummaryDesc')}</CardDescription>
         </CardHeader>
         <CardContent className="p-0">
-          <Table>
+          <Table className={compactTable}>
             <TableHeader className="bg-secondary/40">
               <TableRow>
                 <TableHead className="font-bold text-foreground">{t('owner.colMetric')}</TableHead>
@@ -187,8 +192,10 @@ export default function DashboardTables({
             <TableBody>
               {metricRows.map((row) => (
                 <TableRow key={row.label}>
-                  <TableCell className="text-foreground">{row.label}</TableCell>
-                  <TableCell className="text-right font-semibold tabular-nums text-foreground">
+                  {/* Metric names and the growth value are long sentences — let them
+                      wrap so this table never needs horizontal scrolling. */}
+                  <TableCell className="whitespace-normal text-foreground">{row.label}</TableCell>
+                  <TableCell className="whitespace-normal text-right font-semibold tabular-nums text-foreground">
                     {row.value}
                   </TableCell>
                 </TableRow>
