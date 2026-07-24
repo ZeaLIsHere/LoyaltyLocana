@@ -33,15 +33,9 @@ interface CustomerData {
 interface CustomersClientProps {
   customers: CustomerData[]
   rewardTarget: number
-  /**
-   * Rows come from the hardcoded simulation set, so they have no row in
-   * Supabase — the detail/edit/delete dialog is disabled to avoid firing server
-   * actions against IDs that don't exist.
-   */
-  demo?: boolean
 }
 
-export default function CustomersClient({ customers, rewardTarget, demo }: CustomersClientProps) {
+export default function CustomersClient({ customers, rewardTarget }: CustomersClientProps) {
   const t = useTranslations()
   const locale = useLocale()
   const router = useRouter()
@@ -85,7 +79,6 @@ export default function CustomersClient({ customers, rewardTarget, demo }: Custo
   }
 
   const openDetail = async (c: CustomerData) => {
-    if (demo) return
     setSelected(c)
     setEditName(c.full_name)
     setEditBirthDate(c.birth_date ?? '')
@@ -198,10 +191,8 @@ export default function CustomersClient({ customers, rewardTarget, demo }: Custo
                       onClick={() => openDetail(c)}
                       className={
                         eligible
-                          ? `bg-emerald-500/10 ${demo ? '' : 'cursor-pointer hover:bg-emerald-500/20'}`
-                          : demo
-                            ? ''
-                            : 'cursor-pointer hover:bg-secondary/40'
+                          ? 'cursor-pointer bg-emerald-500/10 hover:bg-emerald-500/20'
+                          : 'cursor-pointer hover:bg-secondary/40'
                       }
                     >
                       <TableCell className="text-muted-foreground tabular-nums">{i + 1}</TableCell>
