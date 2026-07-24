@@ -156,9 +156,9 @@ export default function CustomersClient({ customers, rewardTarget }: CustomersCl
       </div>
 
       {/* Customer Table */}
-      <Card className="min-w-0 border-border shadow-sm">
+      <Card className="border-border shadow-sm">
         <CardContent className="p-0">
-          <Table className="text-xs sm:text-sm [&_td]:px-2 [&_td]:py-2 [&_th]:px-2 sm:[&_td]:px-3 sm:[&_th]:px-3">
+          <Table>
             <TableHeader className="bg-secondary/40">
               <TableRow>
                 <TableHead className="w-14 font-bold text-foreground">{t('owner.colNo')}</TableHead>
@@ -195,10 +195,8 @@ export default function CustomersClient({ customers, rewardTarget }: CustomersCl
                           : 'cursor-pointer hover:bg-secondary/40'
                       }
                     >
-                      <TableCell className="text-muted-foreground tabular-nums">{i + 1}</TableCell>
-                      <TableCell className="whitespace-normal font-semibold text-foreground">
-                        {c.full_name}
-                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground tabular-nums">{i + 1}</TableCell>
+                      <TableCell className="font-semibold text-foreground">{c.full_name}</TableCell>
                       <TableCell className="text-center font-bold tabular-nums text-foreground">
                         {c.current_stamps}
                       </TableCell>
