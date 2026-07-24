@@ -150,6 +150,7 @@
     "noLogs": "No activity yet",
     "customer": "Customer",
     "stamps": "Stamps",
+    "canRedeem": "Card full — ready to redeem a reward",
     "actionAddStamp": "Add Stamp",
     "actionRedeem": "Redeem Reward",
     "actionRejected": "Rejected (cooldown)",

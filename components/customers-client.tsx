@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/dialog'
 import { Users, Search, Coffee, Calendar, Gift, RefreshCw, Trash2 } from 'lucide-react'
 import { fetchCustomerDetail, updateCustomerAction, deleteCustomerAction } from '@/lib/supabase/actions'
+import { STAMP_CARD_TARGET } from '@/lib/constants'
 
 interface CustomerData {
   id: string
@@ -200,15 +201,25 @@ export default function CustomersClient({ customers }: CustomersClientProps) {
                       {c.birth_date ? formatDate(c.birth_date) : '-'}
                     </TableCell>
                     <TableCell>
-                      <Badge
-                        variant="outline"
-                        className="flex w-fit items-center gap-1 border-accent/40 bg-accent/10 font-bold text-accent"
-                      >
-                        <Coffee className="h-3 w-3" />
-                        <span>
-                          {c.current_stamps} {t('owner.stamps')}
-                        </span>
-                      </Badge>
+                      {(() => {
+                        const canRedeem = c.current_stamps >= STAMP_CARD_TARGET
+                        return (
+                          <Badge
+                            variant="outline"
+                            title={canRedeem ? t('owner.canRedeem') : undefined}
+                            className={
+                              canRedeem
+                                ? 'flex w-fit items-center gap-1 border-emerald-500/40 bg-emerald-500/10 font-bold text-emerald-600 dark:text-emerald-400'
+                                : 'flex w-fit items-center gap-1 border-accent/40 bg-accent/10 font-bold text-accent'
+                            }
+                          >
+                            {canRedeem ? <Gift className="h-3 w-3" /> : <Coffee className="h-3 w-3" />}
+                            <span>
+                              {c.current_stamps} {t('owner.stamps')}
+                            </span>
+                          </Badge>
+                        )
+                      })()}
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground">
                       {formatDate(c.created_at)}
