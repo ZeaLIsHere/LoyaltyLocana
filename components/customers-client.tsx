@@ -32,10 +32,9 @@ interface CustomerData {
 
 interface CustomersClientProps {
   customers: CustomerData[]
-  rewardTarget: number
 }
 
-export default function CustomersClient({ customers, rewardTarget }: CustomersClientProps) {
+export default function CustomersClient({ customers }: CustomersClientProps) {
   const t = useTranslations()
   const locale = useLocale()
   const router = useRouter()
@@ -161,58 +160,61 @@ export default function CustomersClient({ customers, rewardTarget }: CustomersCl
           <Table>
             <TableHeader className="bg-secondary/40">
               <TableRow>
-                <TableHead className="w-14 font-bold text-foreground">{t('owner.colNo')}</TableHead>
-                <TableHead className="font-bold text-foreground">{t('owner.colCustomerName')}</TableHead>
-                <TableHead className="text-center font-bold text-foreground">
-                  <span className="flex items-center justify-center gap-1">
-                    <Coffee className="h-4 w-4 text-muted-foreground" />
-                    {t('owner.colStampCount')}
+                <TableHead className="font-bold text-foreground">{t('auth.fullName')}</TableHead>
+                <TableHead className="font-bold text-foreground">{t('auth.email')}</TableHead>
+                <TableHead className="font-bold text-foreground">
+                  <span className="flex items-center gap-1">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    {t('auth.birthDate')}
                   </span>
                 </TableHead>
-                <TableHead className="font-bold text-foreground">{t('owner.colRewardStatus')}</TableHead>
+                <TableHead className="font-bold text-foreground">
+                  <span className="flex items-center gap-1">
+                    <Coffee className="h-4 w-4 text-muted-foreground" />
+                    {t('owner.stamps')}
+                  </span>
+                </TableHead>
+                <TableHead className="font-bold text-foreground">{t('owner.createdAtCol')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredCustomers.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={4}
+                    colSpan={5}
                     className="py-10 text-center text-xs italic text-muted-foreground"
                   >
                     {t('common.noData')}
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredCustomers.map((c, i) => {
-                  const eligible = c.current_stamps >= rewardTarget
-                  return (
-                    <TableRow
-                      key={c.id}
-                      onClick={() => openDetail(c)}
-                      className={
-                        eligible
-                          ? 'cursor-pointer bg-emerald-500/10 hover:bg-emerald-500/20'
-                          : 'cursor-pointer hover:bg-secondary/40'
-                      }
-                    >
-                      <TableCell className="text-sm text-muted-foreground tabular-nums">{i + 1}</TableCell>
-                      <TableCell className="font-semibold text-foreground">{c.full_name}</TableCell>
-                      <TableCell className="text-center font-bold tabular-nums text-foreground">
-                        {c.current_stamps}
-                      </TableCell>
-                      <TableCell>
-                        {eligible ? (
-                          <Badge className="flex w-fit items-center gap-1 border-transparent bg-emerald-600 font-semibold text-white hover:bg-emerald-600">
-                            <Gift className="h-3 w-3" />
-                            <span>{t('owner.eligibleReward')}</span>
-                          </Badge>
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  )
-                })
+                filteredCustomers.map((c) => (
+                  <TableRow
+                    key={c.id}
+                    onClick={() => openDetail(c)}
+                    className="cursor-pointer hover:bg-secondary/40"
+                  >
+                    <TableCell className="font-semibold text-foreground">{c.full_name}</TableCell>
+                    <TableCell className="text-muted-foreground">{c.email}</TableCell>
+                    <TableCell className="text-xs text-foreground">
+                      {c.birth_date ? formatDate(c.birth_date) : '-'}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant="outline"
+                        className="flex w-fit items-center gap-1 border-accent/40 bg-accent/10 font-bold text-accent"
+                      >
+                        <Coffee className="h-3 w-3" />
+                        <span>
+                          {c.current_stamps} {t('owner.stamps')}
+                        </span>
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {formatDate(c.created_at)}
+                    </TableCell>
+                  </TableRow>
+                ))
               )}
             </TableBody>
           </Table>

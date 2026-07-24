@@ -4,32 +4,21 @@ import CustomersClient from '@/components/customers-client'
 export default async function CustomersPage() {
   const supabase = await createClient()
 
-  // Fetch customers + the current reward threshold in parallel.
-  const [{ data: customers }, { data: activeRules }] = await Promise.all([
-    supabase
-      .from('profiles')
-      .select(`
-        id,
-        full_name,
-        email,
-        birth_date,
-        created_at,
-        loyalty_progress (
-          current_stamps
-        )
-      `)
-      .eq('role', 'customer')
-      .order('created_at', { ascending: false }),
-    supabase
-      .from('reward_rules')
-      .select('target_stamps')
-      .eq('is_active', true),
-  ])
-
-  // Reward threshold = highest active reward target (matches the stamp cap in the
-  // spend model). Falls back to 10 when no active rule exists.
-  const rewardTarget =
-    (activeRules ?? []).reduce((max, r) => Math.max(max, r.target_stamps ?? 0), 0) || 10
+  // Fetch all customer profiles with their stamp progress
+  const { data: customers } = await supabase
+    .from('profiles')
+    .select(`
+      id,
+      full_name,
+      email,
+      birth_date,
+      created_at,
+      loyalty_progress (
+        current_stamps
+      )
+    `)
+    .eq('role', 'customer')
+    .order('created_at', { ascending: false })
 
   interface LoyaltyProgress {
     current_stamps: number
@@ -56,5 +45,5 @@ export default async function CustomersPage() {
     }
   })
 
-  return <CustomersClient customers={formattedCustomers} rewardTarget={rewardTarget} />
+  return <CustomersClient customers={formattedCustomers} />
 }

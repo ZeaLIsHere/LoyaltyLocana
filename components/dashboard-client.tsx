@@ -5,11 +5,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, CartesianGrid } from 'recharts'
 import { Users, QrCode, Gift, Coffee, ArrowUpRight } from 'lucide-react'
-import DashboardTables, {
-  type DailyActivityRow,
-  type DashboardMetrics,
-  type FrequencyRow,
-} from '@/components/dashboard-tables'
 
 interface CustomerRow {
   id: string
@@ -35,18 +30,12 @@ interface DashboardClientProps {
   }
   customers: CustomerRow[]
   chartData: ChartItem[]
-  dailyActivity: DailyActivityRow[]
-  metrics: DashboardMetrics
-  frequency: FrequencyRow[]
 }
 
 export default function DashboardClient({
   stats,
   customers,
   chartData,
-  dailyActivity,
-  metrics,
-  frequency,
 }: DashboardClientProps) {
   const t = useTranslations()
 
@@ -173,9 +162,6 @@ export default function DashboardClient({
           </CardContent>
         </Card>
       </div>
-
-      {/* PDF-style data tables */}
-      <DashboardTables dailyActivity={dailyActivity} metrics={metrics} frequency={frequency} />
     </div>
   )
 }
